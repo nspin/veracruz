@@ -23,7 +23,7 @@ use std::{
     string::ToString,
     vec::Vec,
 };
-use veracruz_utils::policy::principal::{Principal, RightTable};
+use veracruz_utils::policy::principal::{Principal, RightsTable};
 use wasi_types::{
     Advice, ClockId, DirCookie, DirEnt, ErrNo, Event, Fd, FdFlags, FdStat, FileDelta, FileSize,
     FileStat, FileType, Inode, LookupFlags, OpenFlags, PreopenType, Prestat, RiFlags, Rights,
@@ -95,7 +95,7 @@ pub struct FileSystem {
     /// The Right table for Principal, including participants and programs.
     /// It will be used in, e.g.  `path_open` function,
     /// to constrain the `Right` of file descriptors.
-    right_table: RightTable,
+    rights_table: RightsTable,
     /// Preopen FD table. Mapping the FD to dir name.
     prestat_table: HashMap<Fd, String>,
 }
@@ -119,12 +119,12 @@ impl FileSystem {
     /// similar.  Rust programs are going to expect that this is true, so we
     /// need to preallocate some files corresponding to those, here.
     #[inline]
-    pub fn new(right_table: RightTable) -> Self {
+    pub fn new(rights_table: RightsTable) -> Self {
         let mut rst = Self {
             file_table: HashMap::new(),
             path_table: HashMap::new(),
             inode_table: HashMap::new(),
-            right_table,
+            rights_table,
             prestat_table: HashMap::new(),
         };
         rst.install_prestat(&vec![""]);
@@ -428,7 +428,7 @@ impl FileSystem {
             .clone())
     }
 
-    /// Change the size of the open file pointed by the file descriptor, `fd`. The extra bypes are
+    /// Change the size of the open file pointed by the file descriptor, `fd`. The extra bytes are
     /// filled with ZERO.
     pub(crate) fn fd_filestat_set_size(&mut self, fd: Fd, size: FileSize) -> FileSystemError<()> {
         info!(
@@ -489,7 +489,7 @@ impl FileSystem {
     /// However, the implementation of WASI spec of fd_pread depends on
     /// how a particular execution engine handles the memory.
     /// That is, different engines provide different API to interact the linear memory
-    /// space of WASM. Hence, the method here return the read bypes as `Vec<u8>`.
+    /// space of WASM. Hence, the method here return the read bytes as `Vec<u8>`.
     pub(crate) fn fd_pread(
         &mut self,
         fd: Fd,
@@ -792,6 +792,13 @@ impl FileSystem {
 
     /// A minimum functionality of opening a file or directory on behalf of the principal `principal`.
     /// We only support search from the root Fd. We ignore the dir look up flag.
+    ///
+    /// The behaviour of `path_open` varies based on the open flags `oflags`:
+    /// * if no flag is set, open a file at the path, if exists, starting from the directory opened by the file descriptor `fd`;
+    /// * if `EXCL` is set, `path_open` fails if the path exists;
+    /// * if `CREATE` is set, create a new file at the path if the path does not exist;
+    /// * if `TRUNC` is set, the file at the path is truncated, that is, clean the content and set the file size to ZERO; and
+    /// * if `DIRECTORY` is set, `path_open` fails if the path is not a directory. **NOT SUUPORT**.
     pub(crate) fn path_open(
         &mut self,
         principal: &Principal,
@@ -860,7 +867,7 @@ impl FileSystem {
                 new_inode
             }
         };
-        // Truacate the file if `trunc` flag is set.
+        // Truncate the file if `trunc` flag is set.
         if oflags.contains(OpenFlags::TRUNC) {
             info!("call path_open trunc flag");
             // Check the right of the program on truacate
@@ -1096,17 +1103,13 @@ impl FileSystem {
     ) -> Result<(), ErrNo> {
         let file_name = file_name.as_ref();
         info!("write_file_by_filename: {}", file_name);
+        let oflag = OpenFlags::CREATE | if !is_append { OpenFlags::TRUNC } else { OpenFlags::empty() };
         let fd = self.path_open(
             principal,
             FileSystem::ROOT_DIRECTORY_FD,
             LookupFlags::empty(),
             file_name,
-            OpenFlags::CREATE
-                | if !is_append {
-                    OpenFlags::TRUNC
-                } else {
-                    OpenFlags::empty()
-                },
+            oflag,
             FileSystem::DEFAULT_RIGHTS,
             FileSystem::DEFAULT_RIGHTS,
             FdFlags::empty(),
@@ -1167,7 +1170,7 @@ impl FileSystem {
 
     /// Get the maximum right associated to the principal on the file
     fn get_right(&self, principal: &Principal, file_name: &str) -> FileSystemError<Rights> {
-        self.right_table
+        self.rights_table
             .get(principal)
             .ok_or(ErrNo::Access)?
             .get(file_name)
