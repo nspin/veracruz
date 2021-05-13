@@ -17,6 +17,8 @@ pub mod error;
 pub mod nitro;
 #[cfg(feature = "tz")]
 pub mod tz;
+#[cfg(feature = "icecap")]
+pub mod icecap;
 
 #[cfg(feature = "std")]
 use error::PlatformError;
@@ -35,6 +37,8 @@ pub enum Platform {
     TrustZone,
     /// The enclave is running under AWS Nitro enclaves.
     Nitro,
+    /// The enclave is running under IceCap.
+    IceCap,
     /// The mock platform for unit testing (client unit tests, at the moment).
     Mock,
 }

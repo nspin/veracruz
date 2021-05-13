@@ -12,8 +12,11 @@
 use std::process::Command;
 
 fn main() {
-    Command::new("bash")
-        .args(&["./populate-test-database.sh"])
-        .output()
-        .unwrap();
+    #[cfg(not(feature = "icecap"))]
+    {
+        Command::new("bash")
+            .args(&["./populate-test-database.sh"])
+            .output()
+            .unwrap();
+    }
 }

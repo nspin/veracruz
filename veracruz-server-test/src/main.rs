@@ -34,6 +34,8 @@ mod tests {
     use veracruz_server::VeracruzServerSGX as VeracruzServerEnclave;
     #[cfg(feature = "tz")]
     use veracruz_server::VeracruzServerTZ as VeracruzServerEnclave;
+    #[cfg(feature = "icecap")]
+    use veracruz_server::VeracruzServerIceCap as VeracruzServerEnclave;
     use veracruz_utils::{platform::Platform, policy::policy::Policy, VERACRUZ_RUNTIME_HASH_EXTENSION_ID};
     use proxy_attestation_server;
     use std::{
@@ -769,6 +771,8 @@ mod tests {
         let test_target_platform: Platform = Platform::SGX;
         #[cfg(feature = "tz")]
         let test_target_platform: Platform = Platform::TrustZone;
+        #[cfg(feature = "icecap")]
+        let test_target_platform: Platform = Platform::IceCap;
 
         info!("             Enclave generated a self-signed certificate:");
 
@@ -1419,8 +1423,8 @@ mod tests {
                 }
             }
         }
-        Err(VeracruzServerError::DirectStrError(
-            "No message arrives server",
+        Err(VeracruzServerError::DirectStringError(
+            "No message arrives server".to_string(),
         ))
     }
 
@@ -1464,8 +1468,8 @@ mod tests {
                 let _res = tx.send((session_id, output))?;
             }
         }
-        Err(VeracruzServerError::DirectStrError(
-            "Terminate due to server crash",
+        Err(VeracruzServerError::DirectStringError(
+            "Terminate due to server crash".to_string(),
         ))
     }
 

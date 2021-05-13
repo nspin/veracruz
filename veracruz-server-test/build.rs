@@ -12,10 +12,13 @@
 use std::process::Command;
 
 fn main() {
-    // Destroy, and then re-create and repopulate, the proxy attestation servers'
-    // database
-    Command::new("bash")
-        .args(&["./populate-test-database.sh"])
-        .output()
-        .unwrap();
+    #[cfg(not(feature = "icecap"))]
+    {
+        // Destroy, and then re-create and repopulate, the proxy attestation servers'
+        // database
+        Command::new("bash")
+            .args(&["./populate-test-database.sh"])
+            .output()
+            .unwrap();
+    }
 }
