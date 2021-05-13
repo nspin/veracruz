@@ -11,6 +11,7 @@ description = "Veracruz integration test-suite.  Tests trusted Veracruz runtime 
 sgx = ["sgx_ucrypto", "sgx_urts", "sgx_types", "veracruz-server/sgx","veracruz-utils/std", "proxy-attestation-server/sgx", "transport-protocol/sgx_attestation", "psa-attestation/sgx"]
 tz = ["veracruz-server/tz", "veracruz-utils/tz", "proxy-attestation-server/psa", "transport-protocol/tz", "psa-attestation/tz"]
 nitro = ["veracruz-server/nitro", "veracruz-utils/nitro", "proxy-attestation-server/nitro"]
+icecap = ["veracruz-server/icecap", "veracruz-utils/icecap", "proxy-attestation-server/psa", "ctor"]
 # debug feature means the enclaves will be started in debug mode (when available)
 # which changes behaviors depending on the platform (for example in Debug mode,
 # Nitro enclave attestation documents have the PCRs zeroed out and the console
@@ -49,6 +50,7 @@ local_ipaddress = "0.1.3"
 sgx_types = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 sgx_ucrypto = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 sgx_urts = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+ctor = { version = "0.1.20", optional = true }
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]
 sgx_ucrypto = { branch="veracruz", git = 'https://github.com/veracruz-project/incubator-teaclave-sgx-sdk.git', optional = true }
@@ -58,4 +60,10 @@ sgx_alloc = { branch="veracruz", git = 'https://github.com/veracruz-project/incu
 [patch.crates-io]
 rustls = { git = "https://github.com/veracruz-project/rustls.git", branch = "veracruz" }
 
-
+# TODO_BEFORE_MERGE
+[patch."https://github.com/veracruz-project/ring.git"]
+ring = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/ring.git", rev = "7d1c3533756c16c890a323846c7ebfe5bd2e678a", optional = true }
+[patch."https://github.com/veracruz-project/rust-protobuf.git"]
+protobuf = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/protobuf.git", rev = "5ead137fcbb0157600967eabafa41115b3f68856", optional = true }
+[patch."https://github.com/stepancheg/rust-protobuf.git"]
+protobuf = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/protobuf.git", rev = "5ead137fcbb0157600967eabafa41115b3f68856", optional = true }
