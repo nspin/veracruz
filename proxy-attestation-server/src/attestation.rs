@@ -15,6 +15,8 @@ pub mod psa;
 pub mod sgx;
 #[cfg(feature = "nitro")]
 pub mod nitro;
+#[cfg(feature = "icecap")]
+pub mod icecap;
 
 use crate::error::*;
 use lazy_static::lazy_static;
@@ -52,6 +54,8 @@ pub async fn start(body_string: String) -> ProxyAttestationServerResponder {
         "psa" => psa::start(&firmware_version, device_id),
         #[cfg(feature = "nitro")]
         "nitro" => nitro::start(&firmware_version, device_id),
+        #[cfg(feature = "icecap")]
+        "icecap" => icecap::start(&firmware_version, device_id),
         _ => Err(ProxyAttestationServerError::UnknownAttestationTokenError),
     }
 }
