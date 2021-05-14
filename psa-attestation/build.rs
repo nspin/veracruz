@@ -23,7 +23,9 @@ fn main() {
     let cc = "gcc";
     #[cfg(feature = "nitro")]
     let cc = "musl-gcc";
-    #[cfg(not(any(feature = "tz", feature = "sgx", feature = "nitro")))]
+    #[cfg(feature = "icecap")]
+    let cc = "aarch64-linux-unknown-gnu-gcc"; // HACK
+    #[cfg(not(any(feature = "tz", feature = "sgx", feature = "nitro", feature = "icecap")))]
     let cc = "gcc";
 
     let project_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
