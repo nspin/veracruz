@@ -34,7 +34,7 @@ hex = "=0.4.2"
 webpki = { git = "https://github.com/veracruz-project/webpki.git", branch = "veracruz" }
 rustls = { git = "https://github.com/veracruz-project/rustls.git", branch = "veracruz" }
 bincode = { git = "https://github.com/veracruz-project/bincode.git", branch = "veracruz", default-features = false, optional = true }
-serde = { git = "https://github.com/veracruz-project/serde.git", default-features = false, optional = true }
+serde = { git = "https://github.com/veracruz-project/serde.git", branch = "veracruz", default-features = false, optional = true }
 byteorder = { version = "1.3.2", optional = true }
 nix = { version = "0.15", optional = true }
 ssh2 = {version = "0.8.3", optional = true }

@@ -3007,14 +3007,6 @@ checksum = "9dad3f759919b92c3068c696c15c3d17238234498bbdcc80f2c469606f948ac8"
 
 [[package]]
 name = "serde"
-version = "1.0.106"
-source = "git+https://github.com/veracruz-project/serde.git#0870a59a10b6df6767ac9cd5c1caa1eb238a1087"
-dependencies = [
- "serde_derive 1.0.106",
-]
-
-[[package]]
-name = "serde"
 version = "1.0.115"
 source = "git+https://github.com/veracruz-project/serde.git?branch=veracruz#19d2797fe979e15876ad180865ffac5c47d7de9c"
 dependencies = [
@@ -3048,16 +3040,6 @@ checksum = "1e18acfa2f90e8b735b2836ab8d538de304cbb6729a7360729ea5a895d15a622"
 dependencies = [
  "half",
  "serde 1.0.126",
-]
-
-[[package]]
-name = "serde_derive"
-version = "1.0.106"
-source = "git+https://github.com/veracruz-project/serde.git#0870a59a10b6df6767ac9cd5c1caa1eb238a1087"
-dependencies = [
- "proc-macro2 1.0.26",
- "quote 1.0.9",
- "syn 1.0.72",
 ]
 
 [[package]]
@@ -3911,7 +3893,7 @@ dependencies = [
  "rouille",
  "runtime-manager-bind",
  "rustls",
- "serde 1.0.106",
+ "serde 1.0.115",
  "serde_json 1.0.51",
  "sgx-root-enclave-bind",
  "sgx_types",
