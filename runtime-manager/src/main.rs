@@ -39,7 +39,3 @@ fn main() -> Result<(), String> {
     runtime_manager_nitro::nitro_main()
         .map_err(|err| format!("Runtime Manager::main nitro_main returned error:{:?}", err))
 }
-
-#[cfg(x)]
-#[path = "fdjklsa.rs"]
-mod x;
