@@ -17,7 +17,7 @@ use crate::{
     },
 };
 use num::FromPrimitive;
-#[cfg(any(feature = "std", feature = "tz", feature = "nitro"))]
+#[cfg(any(feature = "std", feature = "tz", feature = "nitro", feature = "icecap"))]
 use std::sync::{Arc, Mutex};
 #[cfg(feature = "sgx")]
 use std::sync::{Arc, SgxMutex as Mutex};

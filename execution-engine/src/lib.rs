@@ -39,7 +39,7 @@ use crate::{
     fs::FileSystem,
     wasi::{common::ExecutionEngine, wasmi::WASMIRuntimeState},
 };
-#[cfg(any(feature = "std", feature = "tz", feature = "nitro"))]
+#[cfg(any(feature = "std", feature = "tz", feature = "nitro", feature = "icecap"))]
 use std::sync::Mutex;
 #[cfg(feature = "sgx")]
 use std::sync::SgxMutex as Mutex;
@@ -67,7 +67,7 @@ pub fn execute(
             {
                 Box::new(WasmtimeRuntimeState::new(filesystem, program_name.to_string())?)
             }
-            #[cfg(any(feature = "tz", feature = "sgx", feature = "nitro"))]
+            #[cfg(any(feature = "tz", feature = "sgx", feature = "nitro", feature = "icecap"))]
             {
                 return Err(FatalEngineError::EngineIsNotReady);
             }

@@ -22,7 +22,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use err_derive::Error;
 use log::info;
 use serde::{Deserialize, Serialize};
-#[cfg(any(feature = "std", feature = "tz", feature = "nitro"))]
+#[cfg(any(feature = "std", feature = "tz", feature = "nitro", feature = "icecap"))]
 use std::sync::{Arc, Mutex, MutexGuard};
 #[cfg(feature = "sgx")]
 use std::sync::{Arc, SgxMutex as Mutex, SgxMutexGuard as MutexGuard};
