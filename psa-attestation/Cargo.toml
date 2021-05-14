@@ -15,6 +15,7 @@ crate-type = ["rlib"]
 tz = []
 sgx = []
 nitro = []
+icecap = []
 
 [dependencies]
 libc = { git = "https://github.com/veracruz-project/libc.git", branch = "veracruz" }
