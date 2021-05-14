@@ -17,18 +17,18 @@ fn main() {
     //rest of the build
 
     // Build the test collateral
-    let make_result = Command::new("make")
-        .current_dir("../test-collateral")
-        .status()
-        .unwrap();
-    if !make_result.success() {
-        panic!("veracruz-server-test:build.rs: failed to make test-collateral");
-    }
+    // let make_result = Command::new("make")
+    //     .current_dir("../test-collateral")
+    //     .status()
+    //     .unwrap();
+    // if !make_result.success() {
+    //     panic!("veracruz-server-test:build.rs: failed to make test-collateral");
+    // }
 
     // Destroy, and then re-create and repopulate, the proxy attestation servers'
     // database
-    Command::new("bash")
-        .args(&["./populate-test-database.sh"])
-        .output()
-        .unwrap();
+    // Command::new("bash")
+    //     .args(&["./populate-test-database.sh"])
+    //     .output()
+    //     .unwrap();
 }

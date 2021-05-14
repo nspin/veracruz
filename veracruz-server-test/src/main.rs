@@ -31,6 +31,8 @@ mod tests {
     use veracruz_server::VeracruzServerSGX as VeracruzServerEnclave;
     #[cfg(feature = "tz")]
     use veracruz_server::VeracruzServerTZ as VeracruzServerEnclave;
+    #[cfg(feature = "icecap")]
+    use veracruz_server::VeracruzServerIceCap as VeracruzServerEnclave;
     use veracruz_utils::{platform::Platform, policy::policy::Policy};
     #[cfg(feature = "nitro")]
     use regex::Regex;
@@ -242,6 +244,8 @@ mod tests {
         let test_target_platform: Platform = Platform::SGX;
         #[cfg(feature = "tz")]
         let test_target_platform: Platform = Platform::TrustZone;
+        #[cfg(feature = "icecap")]
+        let test_target_platform: Platform = Platform::IceCap;
 
         let runtime_manager_hash = policy.runtime_manager_hash(&test_target_platform).unwrap();
         let enclave_cert_hash_ret = attestation_flow(
@@ -790,6 +794,8 @@ mod tests {
         let test_target_platform: Platform = Platform::SGX;
         #[cfg(feature = "tz")]
         let test_target_platform: Platform = Platform::TrustZone;
+        #[cfg(feature = "icecap")]
+        let test_target_platform: Platform = Platform::IceCap;
 
         let runtime_manager_hash = policy.runtime_manager_hash(&test_target_platform).unwrap();
         let enclave_cert_hash = if attestation_flag {
@@ -1427,7 +1433,7 @@ mod tests {
             }
         }
         Err(VeracruzServerError::DirectStrError(
-            "No message arrives server",
+            "No message arrives server".to_string(),
         ))
     }
 
@@ -1472,7 +1478,7 @@ mod tests {
             }
         }
         Err(VeracruzServerError::DirectStrError(
-            "Terminate due to server crash",
+            "Terminate due to server crash".to_string(),
         ))
     }
 
@@ -1634,4 +1640,12 @@ mod tests {
             .map_err(|_| VeracruzServerError::TLSUnspecifiedError)?;
         Ok(rsa_keys[0].clone())
     }
+
+    pub fn hack_run_all() {
+    }
+}
+
+fn main() {
+    println!("hello");
+    tests::hack_run_all();
 }
