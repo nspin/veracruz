@@ -25,6 +25,7 @@ sgx = ["sgx_types", "sgx_ucrypto", "sgx_urts", "psa-attestation/sgx", "transport
 # that use PSA for their native attestation.
 psa = ["psa-attestation/tz"]
 nitro = [ "serde_cbor", "nitro-enclave-token" ]
+icecap = []
 
 [dependencies]
 rouille = "3.0"
