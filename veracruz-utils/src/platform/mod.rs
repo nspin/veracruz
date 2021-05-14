@@ -25,7 +25,8 @@ pub enum Platform {
     TrustZone,
     /// The enclave is running under AWS Nitro enclaves.
     Nitro,
-    // IceCap,
+    /// The enclave is running under IceCap.
+    IceCap,
     /// The mock platform for unit testing (client unit tests, at the moment).
     Mock,
 }
