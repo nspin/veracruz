@@ -29,6 +29,7 @@ icecap = [
     "icecap-start-generic",
     "icecap-std-external",
     "serde",
+    "bincode",
 ]
 
 [dependencies]
@@ -62,6 +63,7 @@ icecap-core = { path = "../icecap-core", optional = true }
 icecap-start-generic = { path = "../icecap-start-generic", optional = true }
 icecap-std-external = { path = "../icecap-std-external", optional = true }
 serde = { version = "*", default-features = false, features = ["alloc", "derive"], optional = true }
+libm = "*"
 
 [build-dependencies]
 uuid = { version = "0.7", features = ["v4"] }

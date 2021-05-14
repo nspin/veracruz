@@ -16,6 +16,8 @@
 pub mod nitro;
 #[cfg(feature = "tz")]
 pub mod tz;
+#[cfg(feature = "icecap")]
+pub mod icecap;
 
 /// A type capturing the platform the enclave is running on.
 pub enum Platform {
