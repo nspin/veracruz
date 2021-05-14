@@ -2827,6 +2827,7 @@ dependencies = [
 [[package]]
 name = "ring"
 version = "0.16.11"
+source = "git+https://github.com/veracruz-project/ring.git?branch=veracruz#84bc3ad5a9d94153ee75a40e8ba1316a095ad115"
 dependencies = [
  "cc",
  "lazy_static",
@@ -3154,7 +3155,7 @@ dependencies = [
 [[package]]
 name = "sgx_alloc"
 version = "1.1.2"
-source = "git+https://github.com/veracruz-project/incubator-teaclave-sgx-sdk.git?branch=veracruz#87eaed62614842b036b75554a1da61941527db6a"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2#8f065be7a442157bf16dc7106feb795ea1c578eb"
 
 [[package]]
 name = "sgx_backtrace_sys"
