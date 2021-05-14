@@ -13,7 +13,7 @@
 use optee_utee::trace_println;
 #[cfg(feature = "sgx")]
 use sgx_types::sgx_status_t;
-#[cfg(any(feature = "tz", feature = "nitro"))]
+#[cfg(any(feature = "tz", feature = "nitro", feature = "icecap"))]
 use std::sync::Mutex;
 #[cfg(feature = "sgx")]
 use std::{ffi::CString, sync::SgxMutex as Mutex};

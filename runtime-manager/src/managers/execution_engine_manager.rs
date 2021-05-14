@@ -12,7 +12,7 @@
 
 use super::{ProtocolState, ProvisioningResult, RuntimeManagerError, OUTPUT_FILE};
 use lazy_static::lazy_static;
-#[cfg(any(feature = "tz", feature = "nitro"))]
+#[cfg(any(feature = "tz", feature = "nitro", feature = "icecap"))]
 use std::sync::Mutex;
 #[cfg(feature = "sgx")]
 use std::sync::SgxMutex as Mutex;
