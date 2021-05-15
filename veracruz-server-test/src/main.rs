@@ -253,7 +253,8 @@ mod tests {
             &runtime_manager_hash,
             &mut veracruz_server,
         );
-        assert!(enclave_cert_hash_ret.is_ok())
+        // assert!(enclave_cert_hash_ret.is_ok())
+        enclave_cert_hash_ret.unwrap();
     }
 
     // #[test]
@@ -1564,6 +1565,15 @@ mod tests {
     }
 
     fn attestation_flow(
+        _proxy_attestation_server_url: &String,
+        _expected_enclave_hash: &String,
+        _veracruz_server: &mut dyn veracruz_server::VeracruzServer,
+    ) -> Result<Vec<u8>, VeracruzServerError> {
+        Ok(vec![0; 32])
+    }
+
+    #[cfg(x)]
+    fn attestation_flow(
         proxy_attestation_server_url: &String,
         expected_enclave_hash: &String,
         veracruz_server: &mut dyn veracruz_server::VeracruzServer,
@@ -1643,10 +1653,28 @@ mod tests {
 
     pub fn hack_run_all() {
         test_phase1_new_session();
+        test_phase1_enclave_self_signed_cert();
+        test_phase1_attestation_only();
+        // test_debug1_fire_test_on_debug();
+        // test_debug2_linear_regression_without_debug();
+        // test_debug2_linear_regression_without_debug();
+        // test_phase2_single_session_with_invalid_client_certificate();
+        // test_phase2_basic_file_read_write_no_attestation();
+        // test_phase2_random_source_no_data_no_attestation();
+        // test_phase2_random_source_no_program_no_data();
+        // test_phase2_incorrect_program_no_attestation();
+        // test_phase2_random_source_no_data_no_attestation_unauthorized_key();
+        // test_phase2_random_source_no_data_no_attestation_unauthorized_certificate();
+        // test_phase2_random_source_no_data_no_attestation_unauthorized_client();
+        // test_phase2_random_source_one_data_no_attestation();
+        test_phase2_linear_regression_single_data_no_attestation();
     }
 }
 
+use log::{debug, info, LevelFilter};
+
 fn main() {
-    println!("hello");
+    tests::debug_setup();
+    info!("running tests...");
     tests::hack_run_all();
 }

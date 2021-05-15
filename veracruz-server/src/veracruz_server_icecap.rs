@@ -118,12 +118,29 @@ impl VeracruzServer for VeracruzServerIceCap {
         &mut self,
         challenge: Vec<u8>,
     ) -> Result<(Vec<u8>, Vec<u8>, i32)> {
-        let (token, public_key, device_id) = panic!("");
+        let (token, public_key, device_id) = (vec![], vec![], 0);
         return Ok((token, public_key, device_id));
     }
 
-    fn plaintext_data(&mut self, _data: Vec<u8>) -> Result<Option<Vec<u8>>> {
-        mk_err(NOT_IMPLEMENTED)
+    fn plaintext_data(&mut self, data: Vec<u8>) -> Result<Option<Vec<u8>>> {
+        let parsed = transport_protocol::parse_runtime_manager_request(&data)?;
+
+        if parsed.has_request_proxy_psa_attestation_token() {
+            let rpat = parsed.get_request_proxy_psa_attestation_token();
+            let challenge = transport_protocol::parse_request_proxy_psa_attestation_token(rpat);
+            let (psa_attestation_token, pubkey, device_id) =
+                self.proxy_psa_attestation_get_token(challenge)?;
+            let serialized_pat = transport_protocol::serialize_proxy_psa_attestation_token(
+                &psa_attestation_token,
+                &pubkey,
+                device_id,
+            )?;
+            Ok(Some(serialized_pat))
+        } else {
+            Err(VeracruzServerError::MissingFieldError(
+                "plaintext_data proxy_psa_attestation_token",
+            ))
+        }
     }
 
     fn get_enclave_cert(&mut self) -> Result<Vec<u8>> {
