@@ -1,2 +1,2 @@
-with import ../../..;
+with import ../..;
 s.env
