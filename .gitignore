@@ -36,4 +36,4 @@ sdk/datasets/
 */.idea/
 */*/.idea/
 
-tmp
+nix-shell.tmp

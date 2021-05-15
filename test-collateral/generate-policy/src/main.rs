@@ -675,6 +675,8 @@ fn serialize_json(arguments: &Arguments) -> Value {
         // TODO should be tz_hash
         sgx_hash.clone(),
         compute_nitro_enclave_hash(arguments),
+        // TODO should be icecap_hash
+        sgx_hash.clone(),
         format!("{}", &arguments.proxy_attestation_server_ip.as_ref().expect(&format!("Failed to get the proxy attestation server ip"))),
         arguments.enclave_debug_mode,
         serialize_execution_strategy(&arguments.execution_strategy),
