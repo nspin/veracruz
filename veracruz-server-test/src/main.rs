@@ -12,6 +12,13 @@
 //! See the `LICENSE.markdown` file in the Veracruz root directory for
 //! information on licensing and copyright.
 
+macro_rules! t {
+    ($f:ident) => {
+        println!("running test: {}", stringify!($f));
+        $f();
+    }
+}
+
 mod tests {
     use actix_rt::System;
     use base64;
@@ -1652,22 +1659,27 @@ mod tests {
     }
 
     pub fn hack_run_all() {
-        // test_phase1_new_session();
-        // test_phase1_enclave_self_signed_cert();
-        // test_phase1_attestation_only();
-        // test_debug1_fire_test_on_debug();
-        // test_debug2_linear_regression_without_debug();
-        // test_debug2_linear_regression_without_debug();
-        // test_phase2_single_session_with_invalid_client_certificate();
-        // test_phase2_basic_file_read_write_no_attestation();
-        // test_phase2_random_source_no_data_no_attestation();
-        // test_phase2_random_source_no_program_no_data();
-        // test_phase2_incorrect_program_no_attestation();
-        // test_phase2_random_source_no_data_no_attestation_unauthorized_key();
-        // test_phase2_random_source_no_data_no_attestation_unauthorized_certificate();
-        // test_phase2_random_source_no_data_no_attestation_unauthorized_client();
-        // test_phase2_random_source_one_data_no_attestation();
-        test_phase2_linear_regression_single_data_no_attestation();
+        t!(test_phase1_init_destroy_enclave);
+        t!(test_phase1_new_session);
+        t!(test_phase1_enclave_self_signed_cert);
+        t!(test_phase1_attestation_only);
+        t!(test_debug1_fire_test_on_debug);
+        t!(test_debug2_linear_regression_without_debug);
+        t!(test_phase2_single_session_with_invalid_client_certificate);
+        t!(test_phase2_basic_file_read_write_no_attestation);
+        t!(test_phase2_random_source_no_data_no_attestation);
+        t!(test_phase2_random_source_no_program_no_data);
+        t!(test_phase2_incorrect_program_no_attestation);
+        t!(test_phase2_random_source_no_data_no_attestation_unauthorized_key);
+        t!(test_phase2_random_source_no_data_no_attestation_unauthorized_certificate);
+        t!(test_phase2_random_source_no_data_no_attestation_unauthorized_client);
+        t!(test_phase2_random_source_one_data_no_attestation);
+        t!(test_phase2_linear_regression_single_data_no_attestation);
+        t!(test_phase2_intersection_sum_reversed_data_provisioning_two_data_no_attestation);
+        t!(test_phase2_string_edit_distance_two_data_no_attestation);
+        t!(test_phase3_linear_regression_one_data_with_attestation);
+        t!(test_phase3_private_set_intersection_two_data_with_attestation);
+        t!(test_phase4_number_stream_accumulation_one_data_two_stream_with_attestation);
     }
 }
 

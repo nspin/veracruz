@@ -17,6 +17,7 @@ use std::path::PathBuf;
 use std::result;
 use std::sync::Mutex;
 use std::string::ToString;
+use std::process::Command;
 
 use crate::veracruz_server::VeracruzServer;
 use crate::veracruz_server::VeracruzServerError;
@@ -104,14 +105,27 @@ pub struct VeracruzServerIceCap {
 impl VeracruzServer for VeracruzServerIceCap {
 
     fn new(policy_json: &str) -> Result<Self> {
-       let handle = Self {
-           stream: Mutex::new(get_endpoint()?),
-       };
-       match handle.send(&Request::New { policy_json: policy_json.to_string() })? {
-           Response::New => (),
-           _ => return mk_err(UNEXPECTED_RESPONSE),
-       }
-       Ok(handle)
+        let status = Command::new("icecap-host")
+            .arg("create")
+            .arg("0")
+            .arg("/spec.bin")
+            .arg("file:/dev/rb_resource_server")
+            .status().unwrap();
+        assert!(status.success());
+        let status = Command::new("icecap-host")
+            .arg("hack-run")
+            .arg("0")
+            .status().unwrap();
+        assert!(status.success());
+
+        let handle = Self {
+            stream: Mutex::new(get_endpoint()?),
+        };
+        match handle.send(&Request::New { policy_json: policy_json.to_string() })? {
+            Response::New => (),
+            _ => return mk_err(UNEXPECTED_RESPONSE),
+        }
+        Ok(handle)
     }
 
     fn proxy_psa_attestation_get_token(
@@ -200,7 +214,21 @@ impl VeracruzServer for VeracruzServerIceCap {
     }
 
     fn close(&mut self) -> Result<bool> {
+        let status = Command::new("icecap-host")
+            .arg("destroy")
+            .arg("0")
+            .status().unwrap();
+        assert!(status.success());
         Ok(true)
+    }
+}
+
+impl Drop for VeracruzServerIceCap {
+    fn drop(&mut self) {
+        match self.close() {
+            Err(err) => panic!("VeracruzServerIceCap::drop failed in call to self.close:{:?}", err),
+            _ => (),
+        }
     }
 }
 
