@@ -26,15 +26,20 @@ declare_generic_main!(main);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
-    rb: RingBufferConfig,
+    // rb: RingBufferConfig,
 }
 
 fn main(config: Config) -> Fallible<()> {
-    icecap_std_external::set_panic();
+    debug_println!("hello worlt");
+    panic!("dswf");
+    // icecap_std_external::set_panic();
+    debug_println!("hello world 1");
     std::icecap_impl::set_now(std::time::Duration::from_secs(1590968361));
     println!("hello world");
-    let rb = RingBuffer::realize_resume(&config.rb);
-    let wait = config.rb.wait;
+    // let rb = RingBuffer::realize_resume(&config.rb);
+    let rb = panic!();
+    // let wait = config.rb.wait;
+    let wait = panic!();
     run(rb, wait)
 }
 
