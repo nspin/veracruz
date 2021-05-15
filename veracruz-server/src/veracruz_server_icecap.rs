@@ -29,7 +29,7 @@ use veracruz_utils::{
 };
 use bincode::{serialize, deserialize};
 
-const ENDPOINT_ENV: &str = "SINALOA_ENDPOINT";
+const ENDPOINT_ENV: &str = "VERACRUZ_SERVER_ENDPOINT";
 
 const UNEXPECTED_RESPONSE: &str = "unexpected response";
 const NOT_IMPLEMENTED: &str = "not implemented";

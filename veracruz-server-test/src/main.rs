@@ -162,7 +162,7 @@ mod tests {
         });
     }
 
-    #[test]
+    // #[test]
     /// Load every valid policy file in the test-collateral/ and in
     /// test-collateral/invalid_policy,
     /// initialise an enclave.
@@ -195,7 +195,7 @@ mod tests {
         });
     }
 
-    #[test]
+    // #[test]
     /// Load policy file and check if a new session tls can be opened
     fn test_phase1_new_session() {
         iterate_over_policy("../test-collateral/", |policy_json| {
@@ -215,7 +215,7 @@ mod tests {
         Ok(rustls::Certificate(enclave_cert_vec))
     }
 
-    #[test]
+    // #[test]
     /// Load the Veracruz server and generate the self-signed certificate
     fn test_phase1_enclave_self_signed_cert() {
         // start the proxy attestation server
@@ -228,7 +228,7 @@ mod tests {
         });
     }
 
-    #[test]
+    // #[test]
     /// Test the attestation flow without sending any program or data into the Veracruz server
     fn test_phase1_attestation_only() {
         let (policy, policy_json, _) = read_policy(ONE_DATA_SOURCE_POLICY).unwrap();
@@ -256,7 +256,7 @@ mod tests {
         assert!(enclave_cert_hash_ret.is_ok())
     }
 
-    #[test]
+    // #[test]
     #[ignore]
     /// Test if the detect for calling `debug!` in enclave works.
     fn test_debug1_fire_test_on_debug() {
@@ -266,7 +266,7 @@ mod tests {
         assert!(DEBUG_IS_CALLED.load(Ordering::SeqCst));
     }
 
-    #[test]
+    // #[test]
     #[ignore]
     /// Test if the detect for calling `debug!` in enclave works.
     fn test_debug2_linear_regression_without_debug() {
@@ -276,7 +276,7 @@ mod tests {
         assert!(!DEBUG_IS_CALLED.load(Ordering::SeqCst));
     }
 
-    #[test]
+    // #[test]
     /// Attempt to establish a client session with the Veracruz server with an invalid client certificate
     fn test_phase2_single_session_with_invalid_client_certificate() {
         let (policy, policy_json, _) = read_policy(ONE_DATA_SOURCE_POLICY).unwrap();
@@ -297,7 +297,7 @@ mod tests {
         );
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// computation: echoing
     /// data sources: a single input under filename `input.txt`.
@@ -314,7 +314,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
     /// computation: random-source, returning a vec of random u8
@@ -332,7 +332,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Attempt to fetch the result without program nor data
     fn test_phase2_random_source_no_program_no_data() {
         let result = test_template::<Vec<u8>>(
@@ -347,7 +347,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Attempt to provision a wrong program
     fn test_phase2_incorrect_program_no_attestation() {
         let result = test_template::<Vec<u8>>(
@@ -362,7 +362,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Attempt to use an unauthorized key
     fn test_phase2_random_source_no_data_no_attestation_unauthorized_key() {
         let result = test_template::<Vec<u8>>(
@@ -377,7 +377,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Attempt to use an unauthorized certificate
     fn test_phase2_random_source_no_data_no_attestation_unauthorized_certificate() {
         let result = test_template::<Vec<u8>>(
@@ -392,7 +392,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// A unauthorized client attempt to connect the service
     fn test_phase2_random_source_no_data_no_attestation_unauthorized_client() {
         let result = test_template::<Vec<u8>>(
@@ -407,7 +407,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Attempt to provision more data than expected
     fn test_phase2_random_source_one_data_no_attestation() {
         let result = test_template::<Vec<u8>>(
@@ -430,7 +430,7 @@ mod tests {
         intercept: f64,
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
     /// computation: linear regression, computing the grandient and intercept, ie the LinearRegression struct,
@@ -450,7 +450,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Attempt to fetch result without data
     fn test_phase2_linear_regression_no_data_no_attestation() {
         let result = test_template::<LinearRegression>(
@@ -465,7 +465,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
     /// computation: intersection sum, intersection of two data sources
@@ -495,7 +495,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
     /// computation: string-edit-distance, computing the string edit distance.
@@ -513,7 +513,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
     /// computation: linear regression, computing the grandient and intercept, ie the LinearRegression struct,
@@ -546,7 +546,7 @@ mod tests {
         grade: u8,
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
     /// compuatation: set intersection, computing the intersection of two sets of persons.
@@ -568,7 +568,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Integration test:
     /// policy: PiProvider, DataProvider, StreamProvider and ResultReader is the same party
     /// compuatation: sum of an initial f64 number and two streams of f64 numbers.
@@ -587,7 +587,7 @@ mod tests {
         assert!(result.is_ok(), "error:{:?}", result);
     }
 
-    #[test]
+    // #[test]
     /// Attempt to fetch result without enough stream data.
     fn test_phase4_number_stream_accumulation_one_data_one_stream_with_attestation() {
         let result = test_template::<f64>(
@@ -602,7 +602,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Attempt to provision stream data in the state of loading static data.
     fn test_phase4_number_stream_accumulation_no_data_two_stream_with_attestation() {
         let result = test_template::<f64>(
@@ -617,7 +617,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     /// Attempt to provision more stream data.
     fn test_phase4_number_stream_accumulation_no_data_three_stream_with_attestation() {
         let result = test_template::<f64>(
@@ -636,7 +636,7 @@ mod tests {
         assert!(result.is_err(), "An error should occur");
     }
 
-    #[test]
+    // #[test]
     #[ignore]
     /// Performance test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
@@ -659,7 +659,7 @@ mod tests {
         });
     }
 
-    #[test]
+    // #[test]
     #[ignore]
     /// Performance test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
@@ -694,7 +694,7 @@ mod tests {
     /// - Go to directory: sdk/utility/macd2bincode
     /// - execute run.sh . It generates more than 32 datasets of the form *.dat .
     /// - Manually copy all *.dat to sdk/datasets/macd
-    #[test]
+    // #[test]
     #[ignore]
     fn test_multiple_keys() {
         iterate_over_data(MACD_WASM, |data_path| {
@@ -714,7 +714,7 @@ mod tests {
         });
     }
 
-    #[test]
+    // #[test]
     #[ignore]
     /// Performance test:
     /// policy: PiProvider, DataProvider and ResultReader is the same party
@@ -1642,6 +1642,7 @@ mod tests {
     }
 
     pub fn hack_run_all() {
+        test_phase1_new_session();
     }
 }
 
