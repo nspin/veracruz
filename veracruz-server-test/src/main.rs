@@ -1652,9 +1652,9 @@ mod tests {
     }
 
     pub fn hack_run_all() {
-        test_phase1_new_session();
-        test_phase1_enclave_self_signed_cert();
-        test_phase1_attestation_only();
+        // test_phase1_new_session();
+        // test_phase1_enclave_self_signed_cert();
+        // test_phase1_attestation_only();
         // test_debug1_fire_test_on_debug();
         // test_debug2_linear_regression_without_debug();
         // test_debug2_linear_regression_without_debug();

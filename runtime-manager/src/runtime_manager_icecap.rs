@@ -7,7 +7,9 @@ use icecap_start_generic::declare_generic_main;
 use veracruz_utils::platform::icecap::message::{Request, Response};
 use crate::managers::session_manager as actions;
 use bincode::{serialize, deserialize};
-
+use alloc::boxed::Box;
+use alloc::string::ToString;
+use log::{Level, Log, Metadata, Record, SetLoggerError};
 use serde::{Serialize, Deserialize};
 
 extern crate alloc;
@@ -32,6 +34,7 @@ struct Config {
 fn main(config: Config) -> Fallible<()> {
     icecap_std_external::set_panic();
     std::icecap_impl::set_now(std::time::Duration::from_secs(1590968361));
+    init_log().unwrap();
     let rb = RingBuffer::realize_resume(&config.rb);
     let wait = config.rb.wait;
     run(rb, wait)
@@ -118,13 +121,16 @@ impl Server {
             panic!();
             // self.wait.wait();
         }
+        // debug_println!("SEND MSG {:?}", resp_bytes.len());
         self.rb.notify_write();
         Ok(())
     }
 
     fn recv(&mut self) -> Fallible<Request> {
         loop {
+            // debug_println!("RECV LOOP");
             if let Some(msg) = self.rb.read() {
+                // debug_println!("RECV MSG {:?}", msg.len());
                 self.rb.notify_read();
                 let req = deserialize(&msg).unwrap();
                 return Ok(req);
@@ -133,4 +139,49 @@ impl Server {
         }
     }
 
+}
+
+
+
+struct SimpleLogger {
+    level: Level,
+}
+
+impl Log for SimpleLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= self.level
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            let level_string = {
+                {
+                    record.level().to_string()
+                }
+            };
+            let target = if record.target().len() > 0 {
+                record.target()
+            } else {
+                record.module_path().unwrap_or_default()
+            };
+            {
+                println!("{:<5} [{}] {}", level_string, target, record.args());
+            }
+        }
+    }
+
+    fn flush(&self) {}
+}
+
+pub fn init_with_level(level: Level) -> Result<(), SetLoggerError> {
+    let logger = SimpleLogger {
+        level,
+    };
+    log::set_logger(Box::leak(Box::new(logger)))?;
+    log::set_max_level(level.to_level_filter());
+    Ok(())
+}
+
+pub fn init_log() -> Result<(), SetLoggerError> {
+    init_with_level(Level::Trace)
 }
