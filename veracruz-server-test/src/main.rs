@@ -260,8 +260,7 @@ mod tests {
             &runtime_manager_hash,
             &mut veracruz_server,
         );
-        // assert!(enclave_cert_hash_ret.is_ok())
-        enclave_cert_hash_ret.unwrap();
+        assert!(enclave_cert_hash_ret.is_ok())
     }
 
     #[test]
