@@ -4,7 +4,7 @@ use icecap_core::prelude::*;
 use icecap_core::config::*;
 use icecap_start_generic::declare_generic_main;
 
-use veracruz_utils::platform::icecap::message::{Request, Response};
+use veracruz_utils::platform::icecap::message::{Request, Response, ErrorResponse};
 use crate::managers::session_manager as actions;
 use bincode::{serialize, deserialize};
 use alloc::boxed::Box;
@@ -84,33 +84,82 @@ impl Server {
                 Response::New
             }
             Request::GetEnclaveCert => {
-                let cert = actions::get_enclave_cert_pem().map_err(|s| format_err!("{}", s))?;
-                Response::GetEnclaveCert(cert)
+                match actions::get_enclave_cert_pem() {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok(cert) => {
+                        Response::GetEnclaveCert(cert)
+                    }
+                }
             }
             Request::GetEnclaveName => {
-                let name = actions::get_enclave_name().map_err(|s| format_err!("{}", s))?;
-                Response::GetEnclaveName(name)
+                match actions::get_enclave_name() {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok(name) => {
+                        Response::GetEnclaveName(name)
+                    }
+                }
             }
             Request::NewTlsSession => {
-                let sess = actions::new_session().map_err(|s| format_err!("{}", s))?;
-                Response::NewTlsSession(sess)
+                match actions::new_session() {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok(sess) => {
+                        Response::NewTlsSession(sess)
+                    }
+                }
             }
             Request::CloseTlsSession(sess) => {
-                actions::close_session(*sess).map_err(|s| format_err!("{}", s))?;
-                Response::CloseTlsSession
+                match actions::close_session(*sess) {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok(()) => {
+                        Response::CloseTlsSession
+                    }
+                }
             }
             Request::SendTlsData(sess, data) => {
-                actions::send_data(*sess, data).map_err(|s| format_err!("{}", s))?;
-                Response::SendTlsData
+                match actions::send_data(*sess, data) {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok(()) => {
+                        Response::SendTlsData
+                    }
+                }
             }
             Request::GetTlsDataNeeded(sess) => {
-                let needed = actions::get_data_needed(*sess).map_err(|s| format_err!("{}", s))?;
-                Response::GetTlsDataNeeded(needed)
+                match actions::get_data_needed(*sess) {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok(needed) => {
+                        Response::GetTlsDataNeeded(needed)
+                    }
+                }
             }
             Request::GetTlsData(sess) => {
-                let (active, data) = actions::get_data(*sess).map_err(|s| format_err!("{}", s))?;
-                self.active = active;
-                Response::GetTlsData(active, data)
+                match actions::get_data(*sess) {
+                    Err(s) => {
+                        log::debug!("{}", s);
+                        Response::Error(ErrorResponse::Unspecified)
+                    }
+                    Ok((active, data)) => {
+                        self.active = active;
+                        Response::GetTlsData(active, data)
+                    }
+                }
             }
         })
     }
