@@ -1659,11 +1659,11 @@ mod tests {
     }
 
     pub fn hack_run_all() {
-        t!(test_phase1_init_destroy_enclave);
-        t!(test_phase1_new_session);
-        t!(test_phase1_enclave_self_signed_cert);
-        t!(test_phase1_attestation_only);
-        t!(test_debug1_fire_test_on_debug);
+        // t!(test_phase1_init_destroy_enclave);
+        // t!(test_phase1_new_session);
+        // t!(test_phase1_enclave_self_signed_cert);
+        // t!(test_phase1_attestation_only);
+        // t!(test_debug1_fire_test_on_debug);
         t!(test_debug2_linear_regression_without_debug);
         t!(test_phase2_single_session_with_invalid_client_certificate);
         t!(test_phase2_basic_file_read_write_no_attestation);

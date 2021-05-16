@@ -70,9 +70,9 @@ impl Server {
             let resp = self.handle(&req)?;
             self.send(&resp)?;
             if !self.active {
-                panic!("")
-                // println!("shutting down...");
-                // self.ctrl.send(MessageInfo::empty())
+                println!("stopping...");
+                std::icecap_impl::external::runtime::exit();
+                unreachable!();
             }
         }
     }
@@ -165,7 +165,13 @@ impl Log for SimpleLogger {
                 record.module_path().unwrap_or_default()
             };
             {
-                println!("{:<5} [{}] {}", level_string, target, record.args());
+                // println!("{:<5} [{}] {}", level_string, target, record.args());
+                println!("{:<5} [{}:{}] {}",
+                    level_string,
+                    record.file().map(|x| x.to_string()).or(record.file_static().map(|x| x.to_string())).unwrap_or("?".to_string()),
+                    record.line().map(|x| format!("{}", x)).unwrap_or("?".to_string()),
+                    record.args(),
+                );
             }
         }
     }

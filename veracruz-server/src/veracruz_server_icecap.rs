@@ -236,15 +236,18 @@ impl VeracruzServerIceCap {
 
     fn send(&self, request: &Request) -> Result<Response> {
         let msg = serialize(request).unwrap();
+        // log::info!("sending msg {}", msg.len());
         let header = (msg.len() as Header).to_le_bytes();
         let mut stream = self.stream.lock().unwrap();
         stream.write(&header).unwrap();
         stream.write(&msg).unwrap();
+        // log::info!("sent, now reading");
         let mut header_bytes = [0; size_of::<Header>()];
         stream.read_exact(&mut header_bytes).unwrap();
         let header = u32::from_le_bytes(header_bytes);
         let mut resp_bytes = vec![0; header as usize];
         stream.read_exact(&mut resp_bytes).unwrap();
+        // log::info!("got resp {}", resp_bytes.len());
         let resp = deserialize(&resp_bytes).unwrap();
         Ok(resp)
     }

@@ -1185,6 +1185,7 @@ impl ExecutionEngine for WASMIRuntimeState {
     /// program, along with a host state capturing the result of the program's
     /// execution.
     fn invoke_entry_point(&mut self, file_name: &str) -> Result<ErrNo, FatalEngineError> {
+        log::info!("invoke_entry_point");
         let program = self.vfs.read_file_by_filename(file_name)?;
         self.load_program(program.as_slice())?;
         self.program = Principal::Program(file_name.to_string());
