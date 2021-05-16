@@ -22,10 +22,14 @@
 *.png
 Cargo.lock
 **/target/**
+nix-shell.tmp/
 test-collateral/*.dat
 test-collateral/*.json
 test-collateral/*.wasm
 test-collateral/invalid_policy/**
+test-collateral/idash2017/
+test-collateral/macd/
+test-collateral/private-set-inter-sum/
 test-collateral/pgen
 *.vscode/
 *.orig
@@ -37,8 +41,3 @@ sdk/data-generators/idash2017-logistic-regression-generator/*.csv
 sdk/datasets/
 */.idea/
 */*/.idea/
-
-nix-shell.tmp
-/test-collateral/idash2017/
-/test-collateral/macd/
-/test-collateral/private-set-inter-sum/

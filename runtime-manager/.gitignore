@@ -7,5 +7,3 @@
 target/
 *.rlib
 test_tmp/
-
-tmp

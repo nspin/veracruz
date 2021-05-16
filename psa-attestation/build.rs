@@ -24,7 +24,7 @@ fn main() {
     #[cfg(feature = "nitro")]
     let cc = "musl-gcc";
     #[cfg(feature = "icecap")]
-    let cc = "aarch64-unknown-linux-gnu-gcc"; // HACK
+    let cc = env::var("CC").unwrap()
     #[cfg(not(any(feature = "tz", feature = "sgx", feature = "nitro", feature = "icecap")))]
     let cc = "gcc";
 
