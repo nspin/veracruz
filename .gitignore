@@ -39,3 +39,6 @@ sdk/datasets/
 */*/.idea/
 
 nix-shell.tmp
+/test-collateral/idash2017/
+/test-collateral/macd/
+/test-collateral/private-set-inter-sum/

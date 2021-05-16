@@ -105,7 +105,7 @@ DATA_FILES = linear-regression.dat \
 			 number-stream-2.dat
 
 
-all: pgen policy-files $(WASM_PROG_FILES) $(DATA_FILES)
+all: pgen policy-files $(WASM_PROG_FILES) $(DATA_FILES) hack
 
 pgen: generate-policy/src/main.rs generate-policy/Cargo.toml generate-policy/Makefile 
 	$(MAKE) -C generate-policy
@@ -290,3 +290,9 @@ clean:
 	rm -f *.dat
 	$(MAKE) -C generate-policy clean
 	rm -f *.wasm
+
+.PHONY: hack
+hack:
+	cp -rf ../sdk/datasets/idash2017 .
+	cp -rf ../sdk/datasets/macd .
+	cp -rf ../sdk/datasets/private-set-inter-sum .
