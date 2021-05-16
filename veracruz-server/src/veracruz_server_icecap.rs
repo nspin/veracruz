@@ -1,6 +1,6 @@
 use std::{
     env,
-    fs::OpenOptions,
+    fs::{OpenOptions, File},
     io::{Read, Write},
     mem::size_of,
     net::{SocketAddr, TcpStream},
@@ -29,61 +29,13 @@ fn mk_err_raw(msg: impl ToString) -> VeracruzServerError {
     VeracruzServerError::DirectStringError(msg.to_string())
 }
 
-enum Endpoint {
-    TCP(SocketAddr),
-    File(PathBuf),
-}
-
-impl Endpoint {
-
-    fn parse(s: &str) -> Option<Self> {
-        let it: Vec<&str> = s.splitn(2, ":").collect();
-        if it.len() != 2 {
-            return None
-        }
-        Some(match it[0] {
-            "tcp" => {
-                Endpoint::TCP(it[1].parse().ok()?)
-            }
-            "file" => {
-                Endpoint::File(PathBuf::from(it[1]))
-            }
-            _ => {
-                return None
-            }
-        })
-    }
-
-    fn realize(&self) -> Result<Box<dyn ReadWrite + Send>> {
-        Ok(match self {
-            Endpoint::TCP(addr) => {
-                Box::new(TcpStream::connect(addr).map_err(mk_err_raw)?)
-            }
-            Endpoint::File(path) => {
-                Box::new(OpenOptions::new().read(true).write(true).open(path).map_err(mk_err_raw)?)
-            }
-        })
-    }
-
-}
-
-// HACK
-// trait object can only be constrained by a single non-auto trait, so we must
-// intersect Read and Write in another trait
-
-trait ReadWrite: Read + Write {}
-
-impl<T> ReadWrite for T where T: Read + Write {}
-
-fn get_endpoint() -> Result<Box<dyn ReadWrite + Send>> {
-    let s = env::var(ENDPOINT_ENV).map_err(mk_err_raw)?;
-    Endpoint::parse(&s)
-        .ok_or(VeracruzServerError::DirectStringError(format!("invalid value for {}: {:?}", ENDPOINT_ENV, s)))?
-        .realize()
+fn get_endpoint() -> Result<File> {
+    let path = env::var(ENDPOINT_ENV).map_err(mk_err_raw)?;
+    OpenOptions::new().read(true).write(true).open(path).map_err(mk_err_raw)
 }
 
 pub struct VeracruzServerIceCap {
-    stream: Mutex<Box<dyn ReadWrite + Send>>,
+    stream: Mutex<File>,
 }
 
 impl VeracruzServer for VeracruzServerIceCap {
@@ -93,14 +45,17 @@ impl VeracruzServer for VeracruzServerIceCap {
         create_realm();
         run_realm();
 
-        let handle = Self {
+        let server = Self {
             stream: Mutex::new(get_endpoint()?),
         };
-        match handle.send(&Request::New { policy_json: policy_json.to_string() })? {
-            Response::New => (),
-            _ => return mk_err(UNEXPECTED_RESPONSE),
+        match server.send(&Request::New { policy_json: policy_json.to_string() })? {
+            Response::New => {
+                Ok(server)
+            }
+            _ => {
+                mk_err(UNEXPECTED_RESPONSE)
+            }
         }
-        Ok(handle)
     }
 
     fn proxy_psa_attestation_get_token(
@@ -189,11 +144,7 @@ impl VeracruzServer for VeracruzServerIceCap {
     }
 
     fn close(&mut self) -> Result<bool> {
-        let status = Command::new("icecap-host")
-            .arg("destroy")
-            .arg("0")
-            .status().unwrap();
-        assert!(status.success());
+        destroy_realm();
         Ok(true)
     }
 }
