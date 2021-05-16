@@ -1,34 +1,18 @@
-// use crate::ec2_instance::EC2Instance;
-// use crate::veracruz_server::VeracruzServer;
-// use crate::veracruz_server::VeracruzServerError;
-// use lazy_static::lazy_static;
-// use std::sync::Mutex;
-// use veracruz_utils::{
-//     platform::{Platform, nitro::{RuntimeManagerMessage, NitroEnclave, NitroError, NitroStatus},
-//     policy::policy::Policy,
-// };
-
-use std::env;
-use std::fs::OpenOptions;
-use std::io::{Read, Write};
-use std::mem::size_of;
-use std::net::{SocketAddr, TcpStream};
-use std::path::PathBuf;
-use std::result;
-use std::sync::Mutex;
-use std::string::ToString;
-use std::process::Command;
-
-use crate::veracruz_server::VeracruzServer;
-use crate::veracruz_server::VeracruzServerError;
-use veracruz_utils::{
-    policy::policy::Policy,
-    platform::{
-        Platform,
-        icecap::message::{Request, Response, Header},
-    },
+use std::{
+    env,
+    fs::OpenOptions,
+    io::{Read, Write},
+    mem::size_of,
+    net::{SocketAddr, TcpStream},
+    path::PathBuf,
+    result,
+    sync::Mutex,
+    string::ToString,
+    process::Command,
 };
 use bincode::{serialize, deserialize};
+use veracruz_utils::platform::icecap::message::{Request, Response, Header};
+use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
 const ENDPOINT_ENV: &str = "VERACRUZ_SERVER_ENDPOINT";
 
@@ -105,23 +89,9 @@ pub struct VeracruzServerIceCap {
 impl VeracruzServer for VeracruzServerIceCap {
 
     fn new(policy_json: &str) -> Result<Self> {
-        let status = Command::new("icecap-host")
-            .arg("destroy")
-            .arg("0")
-            .status().unwrap();
-        assert!(status.success()); // HACK
-        let status = Command::new("icecap-host")
-            .arg("create")
-            .arg("0")
-            .arg("/spec.bin")
-            .arg("file:/dev/rb_resource_server")
-            .status().unwrap();
-        assert!(status.success());
-        let status = Command::new("icecap-host")
-            .arg("hack-run")
-            .arg("0")
-            .status().unwrap();
-        assert!(status.success());
+        destroy_realm(); // HACK
+        create_realm();
+        run_realm();
 
         let handle = Self {
             stream: Mutex::new(get_endpoint()?),
@@ -230,9 +200,8 @@ impl VeracruzServer for VeracruzServerIceCap {
 
 impl Drop for VeracruzServerIceCap {
     fn drop(&mut self) {
-        match self.close() {
-            Err(err) => panic!("VeracruzServerIceCap::drop failed in call to self.close:{:?}", err),
-            _ => (),
+        if let Err(err) = self.close() {
+            panic!("Veracruz server failed to close: {}", err)
         }
     }
 }
@@ -241,18 +210,15 @@ impl VeracruzServerIceCap {
 
     fn send(&self, request: &Request) -> Result<Response> {
         let msg = serialize(request).unwrap();
-        // log::info!("sending msg {}", msg.len());
         let header = (msg.len() as Header).to_le_bytes();
         let mut stream = self.stream.lock().unwrap();
         stream.write(&header).unwrap();
         stream.write(&msg).unwrap();
-        // log::info!("sent, now reading");
         let mut header_bytes = [0; size_of::<Header>()];
         stream.read_exact(&mut header_bytes).unwrap();
         let header = u32::from_le_bytes(header_bytes);
         let mut resp_bytes = vec![0; header as usize];
         stream.read_exact(&mut resp_bytes).unwrap();
-        // log::info!("got resp {}", resp_bytes.len());
         let resp = deserialize(&resp_bytes).unwrap();
         Ok(resp)
     }
@@ -264,4 +230,30 @@ impl VeracruzServerIceCap {
         }
     }
 
+}
+
+fn create_realm() {
+    let status = Command::new("icecap-host")
+        .arg("create")
+        .arg("0")
+        .arg("/spec.bin")
+        .arg("file:/dev/rb_resource_server")
+        .status().unwrap();
+    assert!(status.success());
+}
+
+fn run_realm() {
+    let status = Command::new("icecap-host")
+        .arg("hack-run")
+        .arg("0")
+        .status().unwrap();
+    assert!(status.success());
+}
+
+fn destroy_realm() {
+    let status = Command::new("icecap-host")
+        .arg("destroy")
+        .arg("0")
+        .status().unwrap();
+    assert!(status.success());
 }

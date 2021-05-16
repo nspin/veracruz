@@ -16,11 +16,6 @@ pub enum Request {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ErrorResponse {
-    Unspecified,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Response {
     New,
     GetEnclaveCert(Vec<u8>),
@@ -30,5 +25,10 @@ pub enum Response {
     SendTlsData,
     GetTlsDataNeeded(bool),
     GetTlsData(bool, Vec<u8>),
-    Error(ErrorResponse),
+    Error(Error),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Error {
+    Unspecified,
 }

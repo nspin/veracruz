@@ -4,7 +4,7 @@ use icecap_core::prelude::*;
 use icecap_core::config::*;
 use icecap_start_generic::declare_generic_main;
 
-use veracruz_utils::platform::icecap::message::{Request, Response, ErrorResponse};
+use veracruz_utils::platform::icecap::message::{Request, Response, Error};
 use crate::managers::session_manager as actions;
 use bincode::{serialize, deserialize};
 use alloc::boxed::Box;
@@ -87,7 +87,7 @@ impl Server {
                 match actions::get_enclave_cert_pem() {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok(cert) => {
                         Response::GetEnclaveCert(cert)
@@ -98,7 +98,7 @@ impl Server {
                 match actions::get_enclave_name() {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok(name) => {
                         Response::GetEnclaveName(name)
@@ -109,7 +109,7 @@ impl Server {
                 match actions::new_session() {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok(sess) => {
                         Response::NewTlsSession(sess)
@@ -120,7 +120,7 @@ impl Server {
                 match actions::close_session(*sess) {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok(()) => {
                         Response::CloseTlsSession
@@ -131,7 +131,7 @@ impl Server {
                 match actions::send_data(*sess, data) {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok(()) => {
                         Response::SendTlsData
@@ -142,7 +142,7 @@ impl Server {
                 match actions::get_data_needed(*sess) {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok(needed) => {
                         Response::GetTlsDataNeeded(needed)
@@ -153,7 +153,7 @@ impl Server {
                 match actions::get_data(*sess) {
                     Err(s) => {
                         log::debug!("{}", s);
-                        Response::Error(ErrorResponse::Unspecified)
+                        Response::Error(Error::Unspecified)
                     }
                     Ok((active, data)) => {
                         self.active = active;
