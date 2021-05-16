@@ -1,12 +1,11 @@
-use super::result;
-
 use core::sync::atomic::{AtomicU8, Ordering};
+use crate::Result;
 
-static STATE: AtomicU8 = AtomicU8::new(0);
+static RNG_STATE: AtomicU8 = AtomicU8::new(0);
 
-pub fn platform_getrandom(buffer: &mut [u8]) -> result::Result {
+pub fn platform_getrandom(buffer: &mut [u8]) -> Result {
     for b in buffer {
-        *b = STATE.fetch_add(1, Ordering::SeqCst);
+        *b = RNG_STATE.fetch_add(1, Ordering::SeqCst);
     }
-    result::Result::Success
+    Result::Success
 }

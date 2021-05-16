@@ -13,12 +13,6 @@
 #![crate_name = "runtime_manager_enclave"]
 #![feature(rustc_private)]
 
-// TODO(nspin)
-#![feature(format_args_nl)]
-#![allow(unused_variables)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-
 #[cfg(feature = "tz")]
 pub mod runtime_manager_trustzone;
 #[cfg(feature = "tz")]

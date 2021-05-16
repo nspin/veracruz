@@ -1,5 +1,5 @@
-use crate::error::*;
 use rand::Rng;
+use crate::error::ProxyAttestationServerResponder;
 
 pub fn start(firmware_version: &str, device_id: i32) -> ProxyAttestationServerResponder {
     let mut challenge: [u8; 32] = [0; 32];

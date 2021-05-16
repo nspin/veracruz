@@ -15,7 +15,6 @@
 #[cfg(test)]
 #[ctor::ctor]
 fn init() {
-    println!("INIT");
     env_logger::init();
 }
 
