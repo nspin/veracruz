@@ -106,6 +106,11 @@ impl VeracruzServer for VeracruzServerIceCap {
 
     fn new(policy_json: &str) -> Result<Self> {
         let status = Command::new("icecap-host")
+            .arg("destroy")
+            .arg("0")
+            .status().unwrap();
+        assert!(status.success()); // HACK
+        let status = Command::new("icecap-host")
             .arg("create")
             .arg("0")
             .arg("/spec.bin")

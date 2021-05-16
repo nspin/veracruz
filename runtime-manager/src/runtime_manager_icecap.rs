@@ -33,7 +33,7 @@ struct Config {
 
 fn main(config: Config) -> Fallible<()> {
     icecap_std_external::set_panic();
-    std::icecap_impl::set_now(std::time::Duration::from_secs(1590968361));
+    std::icecap_impl::set_now(std::time::Duration::from_secs(1621182569));
     init_log().unwrap();
     let rb = RingBuffer::realize_resume(&config.rb);
     let wait = config.rb.wait;
