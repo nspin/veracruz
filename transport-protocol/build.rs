@@ -9,6 +9,8 @@
 //! See the `LICENSE.markdown` file in the Veracruz root directory for
 //! information on licensing and copyright.
 
+extern crate protoc_rust;
+
 use std::env;
 
 fn main() {

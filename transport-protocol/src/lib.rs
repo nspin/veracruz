@@ -19,15 +19,13 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-use generated_module_hack::generated_module;
-
 // The protocol buffer generator generates some deprecated code.
 // I cannot fix this, but the warnings are cluttering my output.
 // Disabling warnings means I don't see these issues for things
 // that I cannot fix.
 // It would be better to do this for a specific file, but there
 // does not appear to be a way to do this
-#[generated_module]
+#[generated_module_hack::generated_module]
 #[allow(warnings)]
 pub mod transport_protocol;
 pub mod custom;
