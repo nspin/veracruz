@@ -1440,7 +1440,7 @@ mod tests {
                 }
             }
         }
-        Err(VeracruzServerError::DirectStrError(
+        Err(VeracruzServerError::DirectStringError(
             "No message arrives server".to_string(),
         ))
     }
@@ -1485,7 +1485,7 @@ mod tests {
                 let _res = tx.send((session_id, output))?;
             }
         }
-        Err(VeracruzServerError::DirectStrError(
+        Err(VeracruzServerError::DirectStringError(
             "Terminate due to server crash".to_string(),
         ))
     }

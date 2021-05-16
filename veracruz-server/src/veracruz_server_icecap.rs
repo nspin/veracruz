@@ -38,11 +38,11 @@ const NOT_IMPLEMENTED: &str = "not implemented";
 type Result<T> = result::Result<T, VeracruzServerError>;
 
 fn mk_err<T>(msg: impl ToString) -> Result<T> {
-    Err(VeracruzServerError::DirectStrError(msg.to_string()))
+    Err(VeracruzServerError::DirectStringError(msg.to_string()))
 }
 
 fn mk_err_raw(msg: impl ToString) -> VeracruzServerError {
-    VeracruzServerError::DirectStrError(msg.to_string())
+    VeracruzServerError::DirectStringError(msg.to_string())
 }
 
 enum Endpoint {
@@ -94,7 +94,7 @@ impl<T> ReadWrite for T where T: Read + Write {}
 fn get_endpoint() -> Result<Box<dyn ReadWrite + Send>> {
     let s = env::var(ENDPOINT_ENV).map_err(mk_err_raw)?;
     Endpoint::parse(&s)
-        .ok_or(VeracruzServerError::DirectStrError(format!("invalid value for {}: {:?}", ENDPOINT_ENV, s)))?
+        .ok_or(VeracruzServerError::DirectStringError(format!("invalid value for {}: {:?}", ENDPOINT_ENV, s)))?
         .realize()
 }
 
