@@ -14,18 +14,22 @@ use bincode::{serialize, deserialize};
 use veracruz_utils::platform::icecap::message::{Request, Response, Header};
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
+const ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
 const RESOURCE_SERVER_ENDPOINT_ENV: &str = "VERACRUZ_RESOURCE_SERVER_ENDPOINT";
-const REALM_ENDPOINT_ENV: &str = "VERACRUZ_REALM_ENDPOINT";
 const REALM_ID_ENV: &str = "VERACRUZ_REALM_ID";
 const REALM_SPEC_ENV: &str = "VERACRUZ_REALM_SPEC";
+const REALM_ENDPOINT_ENV: &str = "VERACRUZ_REALM_ENDPOINT";
+
+const DEFAULT_ICECAP_HOST_COMMAND: &str = "icecap-host";
 
 type Result<T> = result::Result<T, VeracruzServerError>;
 
 struct Configuration {
+    icecap_host_command: PathBuf,
+    resource_server_endpoint: PathBuf,
     realm_id: usize,
     realm_spec: PathBuf,
     realm_endpoint: PathBuf,
-    resource_server_endpoint: PathBuf,
 }
 
 impl Configuration {
@@ -36,15 +40,16 @@ impl Configuration {
 
     fn from_env() -> Result<Self> {
         Ok(Self {
+            icecap_host_command: Self::env_var(ICECAP_HOST_COMMAND_ENV).map(PathBuf::from).unwrap_or(DEFAULT_ICECAP_HOST_COMMAND.into()),
+            resource_server_endpoint: Self::env_var(RESOURCE_SERVER_ENDPOINT_ENV)?.into(),
             realm_id: Self::env_var(REALM_ID_ENV)?.parse::<usize>().map_err(lame_err)?,
             realm_spec: Self::env_var(REALM_SPEC_ENV)?.into(),
             realm_endpoint: Self::env_var(REALM_ENDPOINT_ENV)?.into(),
-            resource_server_endpoint: Self::env_var(RESOURCE_SERVER_ENDPOINT_ENV)?.into(),
         })
     }
 
     fn create_realm(&self) -> Result<()> {
-        let status = Command::new("icecap-host")
+        let status = Command::new(&self.icecap_host_command)
             .arg("create")
             .arg(format!("{}", self.realm_id))
             .arg(&self.realm_spec)
@@ -55,7 +60,7 @@ impl Configuration {
     }
     
     fn run_realm(&self) -> Result<()> {
-        let status = Command::new("icecap-host")
+        let status = Command::new(&self.icecap_host_command)
             .arg("hack-run")
             .arg(format!("{}", self.realm_id))
             .status().unwrap();
@@ -64,14 +69,14 @@ impl Configuration {
     }
     
     fn destroy_realm(&self) -> Result<()> {
-        let status = Command::new("icecap-host")
+        let status = Command::new(&self.icecap_host_command)
             .arg("destroy")
             .arg(format!("{}", self.realm_id))
             .status().unwrap();
         assert!(status.success());
         Ok(())
     }
-    
+
 }
 
 pub struct VeracruzServerIceCap {
@@ -227,11 +232,11 @@ impl VeracruzServerIceCap {
 }
 
 fn unexpected_response() -> VeracruzServerError {
-    // HACK
+    // TODO(nspin) use structured error
     VeracruzServerError::DirectStringError("unexpected response".to_string())
 }
 
-// HACK
+// TODO(nspin) use more precise structured errors
 fn lame_err(msg: impl ToString) -> VeracruzServerError {
     VeracruzServerError::DirectStringError(msg.to_string())
 }
