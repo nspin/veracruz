@@ -1,18 +1,17 @@
 extern crate alloc;
 
-use std::boxed::Box;
 use std::string::ToString;
 use serde::{Serialize, Deserialize};
 use bincode::{serialize, deserialize};
 
 use icecap_core::prelude::*;
 use icecap_core::config::RingBufferConfig;
+use icecap_core::logger::{Logger, Level, DisplayMode};
 use icecap_start_generic::declare_generic_main;
 
 use veracruz_utils::platform::icecap::message::{Request, Response, Error};
-use crate::managers::session_manager;
 
-use log::{Level, Log, Metadata, Record, SetLoggerError};
+use crate::managers::session_manager;
 
 declare_generic_main!(main);
 
@@ -22,9 +21,7 @@ struct Config {
 }
 
 fn main(config: Config) -> Fallible<()> {
-    icecap_std_external::set_panic();
-    std::icecap_impl::set_now(std::time::Duration::from_secs(1621182569)); // HACK
-    init_log().unwrap();
+    icecap_runtime_init();
     let host_ring_buffer = RingBuffer::realize_resume(&config.host_ring_buffer);
     let host_ring_buffer_notification = config.host_ring_buffer.wait;
     RuntimeManager::new(host_ring_buffer, host_ring_buffer_notification).run()
@@ -169,55 +166,13 @@ impl RuntimeManager {
 
 }
 
-
-
-struct SimpleLogger {
-    level: Level,
-}
-
-impl Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= self.level
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            let level_string = {
-                {
-                    record.level().to_string()
-                }
-            };
-            let target = if record.target().len() > 0 {
-                record.target()
-            } else {
-                record.module_path().unwrap_or_default()
-            };
-            {
-                // println!("{:<5} [{}] {}", level_string, target, record.args());
-                println!("{:<5} [{}:{}] {}",
-                    level_string,
-                    record.file().map(|x| x.to_string()).or(record.file_static().map(|x| x.to_string())).unwrap_or("?".to_string()),
-                    record.line().map(|x| format!("{}", x)).unwrap_or("?".to_string()),
-                    record.args(),
-                );
-            }
-        }
-    }
-
-    fn flush(&self) {}
-}
-
-pub fn init_with_level(level: Level) -> Result<(), SetLoggerError> {
-    let logger = SimpleLogger {
-        level,
-    };
-    log::set_logger(Box::leak(Box::new(logger)))?;
-    log::set_max_level(level.to_level_filter());
-    Ok(())
-}
-
-pub fn init_log() -> Result<(), SetLoggerError> {
-    init_with_level(Level::Trace)
+fn icecap_runtime_init() {  
+    icecap_std_external::set_panic();
+    std::icecap_impl::set_now(std::time::Duration::from_secs(1621182569)); // HACK
+    let mut logger = Logger::default();
+    logger.level = Level::Trace;
+    logger.display_mode = DisplayMode::Line;
+    logger.init().unwrap();
 }
 
 // HACK
