@@ -1,18 +1,18 @@
-use std::collections;
+extern crate alloc;
+
+use std::boxed::Box;
+use std::string::ToString;
+use serde::{Serialize, Deserialize};
+use bincode::{serialize, deserialize};
 
 use icecap_core::prelude::*;
-use icecap_core::config::*;
+use icecap_core::config::RingBufferConfig;
 use icecap_start_generic::declare_generic_main;
 
 use veracruz_utils::platform::icecap::message::{Request, Response, Error};
-use crate::managers::session_manager as actions;
-use bincode::{serialize, deserialize};
-use alloc::boxed::Box;
-use alloc::string::ToString;
-use log::{Level, Log, Metadata, Record, SetLoggerError};
-use serde::{Serialize, Deserialize};
+use crate::managers::session_manager;
 
-extern crate alloc;
+use log::{Level, Log, Metadata, Record, SetLoggerError};
 
 declare_generic_main!(main);
 
@@ -55,7 +55,6 @@ impl RuntimeManager {
             self.send(&resp)?;
             if !self.active {
                 std::icecap_impl::external::runtime::exit();
-                unreachable!();
             }
         }
     }
@@ -63,11 +62,11 @@ impl RuntimeManager {
     fn handle(&mut self, req: &Request) -> Fallible<Response> {
         Ok(match req {
             Request::New { policy_json } => {
-                actions::init_session_manager(&policy_json).unwrap();
+                session_manager::init_session_manager(&policy_json).unwrap();
                 Response::New
             }
             Request::GetEnclaveCert => {
-                match actions::get_enclave_cert_pem() {
+                match session_manager::get_enclave_cert_pem() {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
@@ -78,7 +77,7 @@ impl RuntimeManager {
                 }
             }
             Request::GetEnclaveName => {
-                match actions::get_enclave_name() {
+                match session_manager::get_enclave_name() {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
@@ -89,7 +88,7 @@ impl RuntimeManager {
                 }
             }
             Request::NewTlsSession => {
-                match actions::new_session() {
+                match session_manager::new_session() {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
@@ -100,7 +99,7 @@ impl RuntimeManager {
                 }
             }
             Request::CloseTlsSession(sess) => {
-                match actions::close_session(*sess) {
+                match session_manager::close_session(*sess) {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
@@ -111,7 +110,7 @@ impl RuntimeManager {
                 }
             }
             Request::SendTlsData(sess, data) => {
-                match actions::send_data(*sess, data) {
+                match session_manager::send_data(*sess, data) {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
@@ -122,7 +121,7 @@ impl RuntimeManager {
                 }
             }
             Request::GetTlsDataNeeded(sess) => {
-                match actions::get_data_needed(*sess) {
+                match session_manager::get_data_needed(*sess) {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
@@ -133,7 +132,7 @@ impl RuntimeManager {
                 }
             }
             Request::GetTlsData(sess) => {
-                match actions::get_data(*sess) {
+                match session_manager::get_data(*sess) {
                     Err(s) => {
                         log::debug!("{}", s);
                         Response::Error(Error::Unspecified)
