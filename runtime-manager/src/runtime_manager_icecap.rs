@@ -14,52 +14,36 @@ use serde::{Serialize, Deserialize};
 
 extern crate alloc;
 
-#[no_mangle]
-extern "C" fn fmodf(x: f32, y: f32) -> f32 {
-    libm::fmodf(x, y)
-}
-
-#[no_mangle]
-extern "C" fn fmod(x: f64, y: f64) -> f64 {
-    libm::fmod(x, y)
-}
-
 declare_generic_main!(main);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
-    rb: RingBufferConfig,
+    host_ring_buffer: RingBufferConfig,
 }
 
 fn main(config: Config) -> Fallible<()> {
     icecap_std_external::set_panic();
-    std::icecap_impl::set_now(std::time::Duration::from_secs(1621182569));
+    std::icecap_impl::set_now(std::time::Duration::from_secs(1621182569)); // HACK
     init_log().unwrap();
-    let rb = RingBuffer::realize_resume(&config.rb);
-    let wait = config.rb.wait;
-    run(rb, wait)
+    let host_ring_buffer = RingBuffer::realize_resume(&config.host_ring_buffer);
+    let host_ring_buffer_notification = config.host_ring_buffer.wait;
+    RuntimeManager::new(host_ring_buffer, host_ring_buffer_notification).run()
 }
 
-fn run(rb: RingBuffer, wait: Notification) -> Fallible<()> {
-    let mut server = Server::new(rb, wait);
-    println!("running veracruz runtime manager");
-    server.run()
-}
-
-struct Server {
-    rb: PacketRingBuffer,
-    wait: Notification,
+struct RuntimeManager {
+    host_ring_buffer: PacketRingBuffer,
+    host_ring_buffer_notification: Notification,
     active: bool,
 }
 
-impl Server {
+impl RuntimeManager {
 
-    fn new(rb: RingBuffer, wait: Notification) -> Self {
-        rb.enable_notify_read();
-        rb.enable_notify_write();
+    fn new(host_ring_buffer: RingBuffer, host_ring_buffer_notification: Notification) -> Self {
+        host_ring_buffer.enable_notify_read();
+        host_ring_buffer.enable_notify_write();
         Self {
-            rb: PacketRingBuffer::new(rb),
-            wait,
+            host_ring_buffer: PacketRingBuffer::new(host_ring_buffer),
+            host_ring_buffer_notification,
             active: true,
         }
     }
@@ -70,7 +54,6 @@ impl Server {
             let resp = self.handle(&req)?;
             self.send(&resp)?;
             if !self.active {
-                println!("stopping...");
                 std::icecap_impl::external::runtime::exit();
                 unreachable!();
             }
@@ -166,25 +149,22 @@ impl Server {
 
     fn send(&mut self, resp: &Response) -> Fallible<()> {
         let resp_bytes = serialize(resp).unwrap();
-        while !self.rb.write(&resp_bytes) {
-            panic!();
-            // self.wait.wait();
+        while !self.host_ring_buffer.write(&resp_bytes) {
+            log::debug!("host ring buffer full, waiting on notification");
+            self.host_ring_buffer_notification.wait();
         }
-        // debug_println!("SEND MSG {:?}", resp_bytes.len());
-        self.rb.notify_write();
+        self.host_ring_buffer.notify_write();
         Ok(())
     }
 
     fn recv(&mut self) -> Fallible<Request> {
         loop {
-            // debug_println!("RECV LOOP");
-            if let Some(msg) = self.rb.read() {
-                // debug_println!("RECV MSG {:?}", msg.len());
-                self.rb.notify_read();
+            if let Some(msg) = self.host_ring_buffer.read() {
+                self.host_ring_buffer.notify_read();
                 let req = deserialize(&msg).unwrap();
                 return Ok(req);
             }
-            self.wait.wait();
+            self.host_ring_buffer_notification.wait();
         }
     }
 
@@ -239,4 +219,16 @@ pub fn init_with_level(level: Level) -> Result<(), SetLoggerError> {
 
 pub fn init_log() -> Result<(), SetLoggerError> {
     init_with_level(Level::Trace)
+}
+
+// HACK
+#[no_mangle]
+extern "C" fn fmodf(x: f32, y: f32) -> f32 {
+    libm::fmodf(x, y)
+}
+
+// HACK
+#[no_mangle]
+extern "C" fn fmod(x: f64, y: f64) -> f64 {
+    libm::fmod(x, y)
 }
