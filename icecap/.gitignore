@@ -1,6 +1,8 @@
 /build
 /crates
+
 /default.nix
+/slash-nix
 
 result
 result-*

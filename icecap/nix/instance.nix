@@ -24,10 +24,10 @@ mkInstance (self: with self; {
       "console=hvc0"
       "loglevel=7"
     ] ++ (if host2Stage then [
+      "next_init=${nx2Stage.config.build.nextInit}"
+    ] else [
       "spec=${spec}"
       "test_collateral=${testCollateral}"
-    ] else [
-      "next_init=${nx2Stage.config.build.nextInit}"
     ]);
   };
 
@@ -101,7 +101,7 @@ mkInstance (self: with self; {
   '';
 
   testCollateralRaw = lib.cleanSourceWith {
-    src = lib.cleanSource ../veracruz/test-collateral;
+    src = lib.cleanSource ../../test-collateral;
     filter = name: type: type == "directory" || lib.any (pattern: builtins.match pattern name != null) [
       ".*\\.json"
       ".*\\.pem"
