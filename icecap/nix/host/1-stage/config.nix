@@ -37,7 +37,7 @@ in
     '' + ''
 
       mkdir /x
-      cp ${../../../veracruz/veracruz-server-test/proxy-attestation-server.db} /x/proxy-attestation-server.db
+      cp ${instance.db} /x/proxy-attestation-server.db
 
       test_collateral="$(sed -rn 's,.*test_collateral=([^ ]*).*,\1,p' /proc/cmdline)"
       ln -s "/mnt/$test_collateral" /test-collateral

@@ -10,13 +10,13 @@ build_dir := build
 .PHONY: all
 all:
 
-.PHONY: setup
-setup:
-	$(nix_build) $(nix_expression) -A crates -o $(crates_dir)
-
 .PHONY: clean
 clean:
 	rm -rf $(crates_dir) $(build_dir)
+
+.PHONY: setup
+setup:
+	$(nix_build) $(nix_expression) -A crates -o $(crates_dir)
 
 .PHONY: runtime-manager
 runtime-manager:

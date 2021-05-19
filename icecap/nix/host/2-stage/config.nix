@@ -45,7 +45,7 @@ in
     '' + ''
 
       mkdir /x
-      cp ${../../../veracruz/veracruz-server-test/proxy-attestation-server.db} /x/proxy-attestation-server.db
+      cp ${instance.db} /x/proxy-attestation-server.db
 
       ifconfig lo 127.0.0.1
       # route add 127.0.0.1

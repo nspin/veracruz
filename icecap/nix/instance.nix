@@ -117,4 +117,6 @@ mkInstance (self: with self; {
       # RUST_BACKTRACE=full \
   '';
 
+  db = callPackage ./test-database.nix {};
+
 })
