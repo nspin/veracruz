@@ -19,15 +19,15 @@ setup:
 	$(nix_build) $(nix_expression) -A crates -o $(crates_dir)
 
 .PHONY: runtime-manager
-runtime-manager:
+runtime-manager: setup
 	$(nix_shell) --pure $(nix_expression) -A runtime-manager --run build
 
 .PHONY: veracruz-server-test
-veracruz-server-test:
+veracruz-server-test: setup
 	$(nix_shell) --pure $(nix_expression) -A veracruz-server-test --run build
 
 .PHONY: build
-build:
+build: runtime-manager veracruz-server-test
 	$(nix_build) $(nix_expression) -A build
 
 # depends on:

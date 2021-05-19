@@ -16,7 +16,8 @@ let
     (lib.optionalAttrs (hostPlatform.system == "aarch64-none") { profile.release.panic = "abort"; }) # HACK
   ];
 
-  debug = true;
+  # debug = true;
+  debug = false;
 
 in
 
@@ -55,6 +56,7 @@ mkShell (crateUtils.baseEnv // {
 
     build() {
       cargo test --no-run --target ${hostPlatform.config} --features icecap \
+        ${lib.optionalString (!debug) "--release"} \
         -j $NIX_BUILD_CORES \
         --target-dir build/veracruz-server-test/target --manifest-path ../veracruz-server-test/Cargo.toml \
         $@ \

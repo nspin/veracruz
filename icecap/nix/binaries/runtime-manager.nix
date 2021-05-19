@@ -48,7 +48,7 @@ mkShell (crateUtils.baseEnv // {
 
   shellHook = ''
     build() {
-      cargo build --target ${hostPlatform.config} --features icecap \
+      cargo build --target ${hostPlatform.config} --release --features icecap \
         -j $NIX_BUILD_CORES \
         --target-dir build/runtime-manager/target --manifest-path ../runtime-manager/Cargo.toml \
         --out-dir=build/runtime-manager/out -Z unstable-options \

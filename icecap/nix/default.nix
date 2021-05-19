@@ -1,5 +1,5 @@
 let
-  icecapLocal = ../../..icecap;
+  icecapLocal = ../../../icecap;
 
   icecapRemote = builtins.fetchGit rec {
     url = "https://gitlab.com/arm-research/security/icecap/icecap.git";
@@ -8,8 +8,8 @@ let
     submodules = true;
   };
 
-  icecapSource = icecapRemote;
-  # icecapSource = icecapLocal;
+  # icecapSource = icecapRemote;
+  icecapSource = icecapLocal;
 
   icecap = import (icecapSource + "/nix");
 
