@@ -42,8 +42,8 @@ in
       test_collateral="$(sed -rn 's,.*test_collateral=([^ ]*).*,\1,p' /proc/cmdline)"
       ln -s "/mnt/$test_collateral" /test-collateral
 
+      # TODO
       ifconfig lo 127.0.0.1
-      # route add 127.0.0.1
     '';
 
     initramfs.extraUtilsCommands = ''
@@ -70,7 +70,6 @@ in
         VERACRUZ_REALM_ENDPOINT=/dev/rb_realm \
           veracruz-server-test --test-threads=1 "$@"
       }
-        # RUST_BACKTRACE=full \
     '';
 
   };

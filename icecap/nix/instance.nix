@@ -10,6 +10,7 @@
 }:
 
 let
+  host2Stage = false;
 
 in
 mkInstance (self: with self; {
@@ -17,16 +18,17 @@ mkInstance (self: with self; {
   payload = uBoot.${icecapPlat}.mkDefaultPayload {
     dtb = composition.host-dtb;
     linuxImage = linuxKernel.host.${icecapPlat}.kernel;
-    # initramfs = nx2Stage.config.build.initramfs;
-    initramfs = nx1Stage.config.build.initramfs;
+    initramfs = (if host2Stage then nx2Stage else nx1Stage).config.build.initramfs;
     bootargs = [
       "earlycon=icecap_vmm"
       "console=hvc0"
       "loglevel=7"
+    ] ++ (if host2Stage then [
       "spec=${spec}"
-      "test_collateral=${test-collateral}"
-      # "next_init=${nx2Stage.config.build.nextInit}"
-    ];
+      "test_collateral=${testCollateral}"
+    ] else [
+      "next_init=${nx2Stage.config.build.nextInit}"
+    ]);
   };
 
   icecapPlatArgs.rpi4.extraBootPartitionCommands = ''
@@ -61,7 +63,7 @@ mkInstance (self: with self; {
     src = ./realm/ddl;
     config = {
       components = {
-        veracruz.image = stripElfSplit runtimeManagerEnclaveElf;
+        runtime_manager.image = stripElfSplit runtimeManagerEnclaveElf;
       };
     };
   };
@@ -86,15 +88,19 @@ mkInstance (self: with self; {
     cp ${veracruzServerTestElf} $out/bin/veracruz-server-test
   '';
 
-  test-collateral = runCommand "test-collateral" {
+  # TODO
+  # db = callPackage ./test-database.nix {};
+  db = ../../veracruz-server-test/proxy-attestation-server.db;
+
+  testCollateral = runCommand "test-collateral" {
     nativeBuildInputs = [ nukeReferences ];
   } ''
-    cp -r --no-preserve=mode,ownership ${test-collateral-raw} $out
+    cp -r --no-preserve=mode,ownership ${testCollateralRaw} $out
     find $out -type d -empty -delete
     nuke-refs $out
   '';
 
-  test-collateral-raw = lib.cleanSourceWith {
+  testCollateralRaw = lib.cleanSourceWith {
     src = lib.cleanSource ../veracruz/test-collateral;
     filter = name: type: type == "directory" || lib.any (pattern: builtins.match pattern name != null) [
       ".*\\.json"
@@ -104,20 +110,17 @@ mkInstance (self: with self; {
     ];
   };
 
-  t = pkgs_linux.writeScript "x.sh" ''
+  test2Stage = pkgs_linux.writeScript "test.sh" ''
     #!${pkgs_linux.runtimeShell}
     cd /x
-    cp -f ${spec} /spec.bin
-    ln -sf ${test-collateral} /test-collateral
-    cp -f ${veracruzServerTestElf} v
+    ln -sf ${testCollateral} /test-collateral
     RUST_LOG=debug \
     DATABASE_URL=proxy-attestation-server.db \
-    VERACRUZ_SERVER_ENDPOINT=/dev/rb_realm \
-      v --test-threads=1 "$@"
-      # RUST_BACKTRACE=full \
+    VERACRUZ_RESOURCE_SERVER_ENDPOINT=file:/dev/rb_resource_server \
+    VERACRUZ_REALM_ID=0 \
+    VERACRUZ_REALM_SPEC=${spec} \
+    VERACRUZ_REALM_ENDPOINT=/dev/rb_realm \
+      ${veracruzServerTestElf} --test-threads=1 "$@"
   '';
-
-  # db = callPackage ./test-database.nix {};
-  db = ../../veracruz-server-test/proxy-attestation-server.db;
 
 })

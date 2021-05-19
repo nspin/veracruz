@@ -47,8 +47,8 @@ in
       mkdir /x
       cp ${instance.db} /x/proxy-attestation-server.db
 
+      # TODO
       ifconfig lo 127.0.0.1
-      # route add 127.0.0.1
     '';
 
   };

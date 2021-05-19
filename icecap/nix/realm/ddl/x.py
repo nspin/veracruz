@@ -1,6 +1,5 @@
 from capdl import ObjectType, Cap
 from icedl import *
-from icedl.utils import as_list
 
 composition = start()
 
@@ -8,7 +7,7 @@ veracruz_con = composition.extern_ring_buffer('realm_vmm_con', size=4096)
 sandbox_con = composition.extern_ring_buffer('realm_vm_con', size=4096)
 host_rb = composition.extern_ring_buffer('host_raw', 1 << 21)
 
-class Veracruz(GenericElfComponent):
+class RuntimeManager(GenericElfComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(affinity=2, *args, **kwargs)
@@ -19,6 +18,6 @@ class Veracruz(GenericElfComponent):
     def arg_json(self):
         return self._arg
 
-veracruz = composition.component(Veracruz, 'veracruz')
+runtime_manager = composition.component(RuntimeManager, 'runtime_manager')
 
 composition.complete()
