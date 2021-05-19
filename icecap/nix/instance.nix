@@ -117,6 +117,7 @@ mkInstance (self: with self; {
       # RUST_BACKTRACE=full \
   '';
 
-  db = callPackage ./test-database.nix {};
+  # db = callPackage ./test-database.nix {};
+  db = ../../veracruz-server-test/proxy-attestation-server.db;
 
 })

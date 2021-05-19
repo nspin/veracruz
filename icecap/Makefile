@@ -29,3 +29,7 @@ veracruz-server-test:
 .PHONY: build
 build:
 	$(nix_build) $(nix_expression) -A build
+
+# depends on:
+#	../test-collateral having been populated
+# 	../veracruz-server-test/proxy-attestation-server.db having been generated
