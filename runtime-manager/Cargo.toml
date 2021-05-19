@@ -53,9 +53,9 @@ sgx_tdh = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.gi
 wasi-types = { git = "https://github.com/veracruz-project/wasi-types.git", branch = "veracruz" }
 
 # TODO
-icecap-core = { path = "../icecap-core", optional = true }
-icecap-start-generic = { path = "../icecap-start-generic", optional = true }
-icecap-std-external = { path = "../icecap-std-external", optional = true }
+icecap-core = { path = "../icecap/realm-crates/icecap-core", optional = true }
+icecap-start-generic = { path = "../icecap/realm-crates/icecap-start-generic", optional = true }
+icecap-std-external = { path = "../icecap/realm-crates/icecap-std-external", optional = true }
 serde = { version = "1.0", default-features = false, features = ["alloc", "derive"], optional = true }
 log = { version = "0.4", optional = true }
 libm = { version = "0.2", optional = true } # HACK
@@ -68,3 +68,11 @@ sgx_alloc = { branch="veracruz", git = "https://github.com/veracruz-project/incu
 
 [profile.release]
 lto = true
+
+
+[patch."https://github.com/veracruz-project/ring.git"]
+ring = { path = "../../local/minor-patches/rust/ring", optional = true }
+[patch."https://github.com/veracruz-project/rust-protobuf.git"]
+protobuf = { path = "../../local/minor-patches/rust/protobuf/protobuf", optional = true }
+[patch."https://github.com/stepancheg/rust-protobuf.git"]
+protobuf = { path = "../../local/minor-patches/rust/protobuf/protobuf", optional = true }
