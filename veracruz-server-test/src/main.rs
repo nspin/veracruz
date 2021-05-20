@@ -1569,15 +1569,6 @@ mod tests {
         Ok(received_body)
     }
 
-    #[cfg(x)]
-    fn attestation_flow(
-        _proxy_attestation_server_url: &String,
-        _expected_enclave_hash: &String,
-        _veracruz_server: &mut dyn veracruz_server::VeracruzServer,
-    ) -> Result<Vec<u8>, VeracruzServerError> {
-        Ok(vec![0; 32])
-    }
-
     fn attestation_flow(
         proxy_attestation_server_url: &String,
         expected_enclave_hash: &String,

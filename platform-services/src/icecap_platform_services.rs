@@ -1,6 +1,8 @@
 use core::sync::atomic::{AtomicU8, Ordering};
 use crate::Result;
 
+// HACK
+
 static RNG_STATE: AtomicU8 = AtomicU8::new(0);
 
 pub fn platform_getrandom(buffer: &mut [u8]) -> Result {

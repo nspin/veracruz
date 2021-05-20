@@ -22,7 +22,6 @@
 *.png
 Cargo.lock
 **/target/**
-nix-shell.tmp/
 test-collateral/*.dat
 test-collateral/*.json
 test-collateral/*.wasm

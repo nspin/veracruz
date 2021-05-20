@@ -1,3 +1,5 @@
+# TODO_BEFORE_MERGE
+
 # hash_value=$(dd skip=960 count=32 if=../sgx-root-enclave/css.bin bs=1 status=none| xxd -ps -cols 32)
 hash_value=0000000000000000000000000000000000000000000000000000000000000000
 echo $hash_value

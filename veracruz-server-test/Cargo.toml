@@ -60,8 +60,7 @@ sgx_alloc = { branch="veracruz", git = 'https://github.com/veracruz-project/incu
 [patch.crates-io]
 rustls = { git = "https://github.com/veracruz-project/rustls.git", branch = "veracruz" }
 
-
-
+# TODO_BEFORE_MERGE
 [patch."https://github.com/veracruz-project/ring.git"]
 ring = { path = "../../local/minor-patches/rust/ring", optional = true }
 [patch."https://github.com/veracruz-project/rust-protobuf.git"]
