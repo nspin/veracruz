@@ -1,22 +1,16 @@
-{ lib, hostPlatform
-, mkShell
-, protobuf, perl
-, libs, liboutline, sysroot-rs
-, which
-, stdenv
-, nixToToml
+{ lib, stdenv, hostPlatform, buildPackages, mkShell
 , cargo, git, cacert
-, buildPackages
-, crateUtils
+, protobuf, perl
+, crateUtils, nixToToml
+, liboutline, sysroot-rs
 , icecapCratesAttrs
 }:
 
 let
 
-
   cargoConfig = crateUtils.clobber [
     crateUtils.baseCargoConfig
-    (lib.optionalAttrs (hostPlatform.system == "aarch64-none") { profile.release.panic = "abort"; }) # HACK
+    { profile.release.panic = "abort"; }
     {
       target.${hostPlatform.config} = crateUtils.clobber (map (crate:
       if crate.buildScript == null then {} else {
@@ -31,18 +25,19 @@ let
 in
 
 mkShell (crateUtils.baseEnv // {
+
   NIX_HACK_CARGO_CONFIG = nixToToml cargoConfig;
+
+  depsBuildBuild = [
+    buildPackages.stdenv.cc
+  ];
 
   nativeBuildInputs = [
     cargo git cacert
     protobuf perl
   ];
 
-  depsBuildBuild = [
-    buildPackages.stdenv.cc
-  ];
-
-  buildInputs = with libs; [
+  buildInputs = [
     liboutline
   ];
 

@@ -45,7 +45,7 @@ in
     '' + ''
 
       mkdir /x
-      cp ${instance.db} /x/proxy-attestation-server.db
+      cp ${proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
 
       # TODO
       ifconfig lo 127.0.0.1

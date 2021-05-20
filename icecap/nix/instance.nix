@@ -1,12 +1,10 @@
 { lib, runCommand
 , nukeReferences
-, icecapPlat
-, icecapSrcAbsSplit, crateUtils
+, icecapPlat, pkgs_linux
 , nixosLite, linuxKernel, uBoot
 , mkIceDL, mkDynDLSpec, stripElfSplit
-, pkgs_dev, pkgs_linux
+, crateUtils, globalCrates
 , mkInstance
-, globalCrates
 }:
 
 let
@@ -89,8 +87,7 @@ mkInstance (self: with self; {
   '';
 
   # TODO
-  # db = callPackage ./test-database.nix {};
-  db = ../../veracruz-server-test/proxy-attestation-server.db;
+  proxyAttestationServerTestDatabase = ../../veracruz-server-test/proxy-attestation-server.db;
 
   testCollateral = runCommand "test-collateral" {
     nativeBuildInputs = [ nukeReferences ];

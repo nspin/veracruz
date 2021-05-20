@@ -1,11 +1,9 @@
-{ lib, hostPlatform, stdenv
+{ lib, stdenv, hostPlatform, buildPackages, mkShell
 , llvmPackages
+, cargo, git, cacert
 , pkgconfig, protobuf, perl, python3
 , openssl, sqlite
-, mkShell, crateUtils
-, buildPackages
-, cargo, git, cacert
-, nixToToml
+, crateUtils, nixToToml
 }:
 
 let
@@ -13,7 +11,6 @@ let
 
   cargoConfig = crateUtils.clobber [
     crateUtils.baseCargoConfig
-    (lib.optionalAttrs (hostPlatform.system == "aarch64-none") { profile.release.panic = "abort"; }) # HACK
   ];
 
   # debug = true;
@@ -24,15 +21,19 @@ in
 mkShell (crateUtils.baseEnv // {
 
   NIX_HACK_CARGO_CONFIG = nixToToml cargoConfig;
+  PKG_CONFIG_ALLOW_CROSS = 1;
+  LIBCLANG_PATH = "${libclang}/lib";
 
-  nativeBuildInputs = [
-    cargo git cacert
-    pkgconfig protobuf perl python3
-  ];
+  hardeningDisable = [ "all" ]; # HACK
 
   depsBuildBuild = [
     buildPackages.stdenv.cc
     libclang
+  ];
+
+  nativeBuildInputs = [
+    cargo git cacert
+    pkgconfig protobuf perl python3
   ];
 
   buildInputs = [
@@ -75,7 +76,4 @@ mkShell (crateUtils.baseEnv // {
     }
   '';
 
-  PKG_CONFIG_ALLOW_CROSS = 1;
-  LIBCLANG_PATH = "${libclang}/lib";
-  hardeningDisable = [ "all" ];
 })
