@@ -52,6 +52,7 @@ in
 
       copy_bin_and_libs ${pkgs.icecap.icecap-host}/bin/icecap-host
 
+      # debugging tools
       copy_bin_and_libs ${pkgs.strace}/bin/strace
       copy_bin_and_libs ${pkgs.iproute}/bin/ip
       copy_bin_and_libs ${pkgs.curl.bin}/bin/curl

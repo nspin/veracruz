@@ -1,5 +1,3 @@
-debug ?=
-
 nix_build := nix-build
 nix_shell := nix-shell
 nix_expression := ./targets.nix

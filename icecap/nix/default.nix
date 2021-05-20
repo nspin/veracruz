@@ -4,12 +4,12 @@ let
   icecapRemote = builtins.fetchGit rec {
     url = "https://gitlab.com/arm-research/security/icecap/icecap.git";
     ref = "veracruz";
-    rev = "8a2e8f6765baef8adc5d03bd8452b3ccec4e84f5";
+    rev = "ef90f3f4afd02ed3a347b6497da3d3a07bb20f8b";
     submodules = true;
   };
 
-  # icecapSource = icecapRemote;
-  icecapSource = icecapLocal;
+  icecapSource = icecapRemote;
+  # icecapSource = icecapLocal;
 
   icecap = import (icecapSource + "/nix");
 
