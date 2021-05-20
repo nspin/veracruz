@@ -17,8 +17,6 @@ use veracruz_utils::{
 };
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
-use psa_attestation as psa;
-
 const ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
 const RESOURCE_SERVER_ENDPOINT_ENV: &str = "VERACRUZ_RESOURCE_SERVER_ENDPOINT";
 const REALM_ID_ENV: &str = "VERACRUZ_REALM_ID";
@@ -98,7 +96,7 @@ impl VeracruzServer for VeracruzServerIceCap {
 
         let policy: Policy = Policy::from_json(policy_json)?;
 
-        let device_id = native_attestation(&policy.proxy_attestation_server_url())?;
+        let device_id = hack::native_attestation(&policy.proxy_attestation_server_url())?;
 
         let configuration = Configuration::from_env()?;
         configuration.destroy_realm()?; // HACK
@@ -125,36 +123,8 @@ impl VeracruzServer for VeracruzServerIceCap {
         challenge: Vec<u8>,
     ) -> Result<(Vec<u8>, Vec<u8>, i32)> {
         let enclave_cert = self.get_enclave_cert()?;
-
-        let enclave_hash = &RUNTIME_MANAGER_REALM_HASH;
-
-        let token = {
-            let mut token: Vec<u8> = Vec::with_capacity(2048);
-            let mut token_len: u64 = 0;
-            let enclave_cert_hash = ring::digest::digest(&ring::digest::SHA256, &enclave_cert);
-            let enclave_name = "ac40a0c".as_bytes();
-            assert_eq!(0, unsafe {
-                psa::psa_initial_attest_get_token(
-                    enclave_hash.as_ptr() as *const u8,
-                    enclave_hash.len() as u64,
-                    enclave_cert_hash.as_ref().as_ptr() as *const u8,
-                    enclave_cert_hash.as_ref().len() as u64,
-                    enclave_name.as_ptr() as *const u8,
-                    enclave_name.len() as u64,
-                    challenge.as_ptr() as *const u8,
-                    challenge.len() as u64,
-                    token.as_mut_ptr() as *mut u8,
-                    2048,
-                    &mut token_len as *mut u64,
-                )
-            });
-            unsafe {
-                token.set_len(token_len as usize)
-            };
-            token
-        };
-
-        return Ok((token, get_device_public_key(), self.device_id));
+        let (token, device_public_key) = hack::proxy_attesation(&challenge, &enclave_cert)?;
+        Ok((token, device_public_key, self.device_id))
     }
 
     fn plaintext_data(&mut self, data: Vec<u8>) -> Result<Option<Vec<u8>>> {
@@ -286,109 +256,138 @@ fn lame_err(msg: impl ToString) -> VeracruzServerError {
 
 
 // HACK
+mod hack {
+    use std::sync::{Once, atomic::{AtomicI32, Ordering}};
+    use super::Result;
 
+    const EXAMPLE_HASH: [u8; 32] = [0; 32];
 
-const EXAMPLE_HASH: [u8; 32] = [0; 32];
+    const EXAMPLE_PRIVATE_KEY: [u8; 32] = [
+        0xe6, 0xbf, 0x1e, 0x3d, 0xb4, 0x45, 0x42, 0xbe,
+        0xf5, 0x35, 0xe7, 0xac, 0xbc, 0x2d, 0x54, 0xd0,
+        0xba, 0x94, 0xbf, 0xb5, 0x47, 0x67, 0x2c, 0x31,
+        0xc1, 0xd4, 0xee, 0x1c, 0x05, 0x76, 0xa1, 0x44,
+    ];
 
-const RUNTIME_MANAGER_REALM_HASH: &[u8] = &EXAMPLE_HASH;
-const ROOT_REALM_HASH: &[u8] = &EXAMPLE_HASH;
+    const RUNTIME_MANAGER_REALM_HASH: &[u8] = &EXAMPLE_HASH;
+    const ROOT_REALM_HASH: &[u8] = &EXAMPLE_HASH;
 
-const EXAMPLE_PRIVATE_KEY: [u8; 32] = [
-    0xe6, 0xbf, 0x1e, 0x3d, 0xb4, 0x45, 0x42, 0xbe,
-    0xf5, 0x35, 0xe7, 0xac, 0xbc, 0x2d, 0x54, 0xd0,
-    0xba, 0x94, 0xbf, 0xb5, 0x47, 0x67, 0x2c, 0x31,
-    0xc1, 0xd4, 0xee, 0x1c, 0x05, 0x76, 0xa1, 0x44,
-];
+    const DEVICE_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
+    const ROOT_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
 
-const DEVICE_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
-const ROOT_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
+    const FIRMWARE_VERSION: &str = "0.3.0";
 
-use std::sync::{Once, atomic::{AtomicI32, Ordering}};
+    static DEVICE_ID: AtomicI32 = AtomicI32::new(0);
+    static NATIVE_ATTESTATION: Once = Once::new();
 
-static DEVICE_ID: AtomicI32 = AtomicI32::new(0);
-
-static NATIVE_ATTESTATION: Once = Once::new();
-
-fn get_device_private_key() -> &'static [u8] {
-    DEVICE_PRIVATE_KEY
-}
-
-fn get_device_public_key() -> Vec<u8> {
-    let device_private_key = get_device_private_key();
-    let mut device_key_handle: u16 = 0;
-    assert_eq!(0, unsafe {
-        psa::psa_initial_attest_load_key(
-            device_private_key.as_ptr(),
-            device_private_key.len() as u64,
-            &mut device_key_handle,
-        )
-    });
-    let mut device_public_key = std::vec::Vec::with_capacity(128);
-    let mut device_public_key_size: u64 = 0;
-    assert_eq!(0, unsafe {
-        psa::t_cose_sign1_get_verification_pubkey(
-            device_key_handle,
-            device_public_key.as_mut_ptr() as *mut u8,
-            device_public_key.capacity() as u64,
-            &mut device_public_key_size as *mut u64,
-        )
-    });
-    unsafe {
-        device_public_key.set_len(device_public_key_size as usize)
-    };
-    device_public_key
-}
-
-fn native_attestation(proxy_attestation_server_url: &str) -> Result<i32> {
-    NATIVE_ATTESTATION.call_once(|| {
-        let device_id = native_attestation_once(proxy_attestation_server_url).unwrap();
-        DEVICE_ID.swap(device_id, Ordering::SeqCst);
-    });
-    Ok(DEVICE_ID.load(Ordering::SeqCst))
-}
-
-fn native_attestation_once(proxy_attestation_server_url: &str) -> Result<i32> {
-
-    let firmware_version = "0.3.0";
-
-    let proxy_attestation_server_response = crate::send_proxy_attestation_server_start(proxy_attestation_server_url, "psa", firmware_version)?;
-    assert!(proxy_attestation_server_response.has_psa_attestation_init());
-    let (challenge, device_id) = transport_protocol::parse_psa_attestation_init(
-        proxy_attestation_server_response.get_psa_attestation_init(),
-    )?;
-
-    let root_hash = ROOT_REALM_HASH;
-
-    let token = {
-        let mut token: Vec<u8> = Vec::with_capacity(2048);
-        let mut token_len: u64 = 0;
-        let device_public_key_hash = ring::digest::digest(&ring::digest::SHA256, &get_device_public_key());
-        let enclave_name = "ac40a0c".as_bytes();
+    fn get_device_public_key() -> Vec<u8> {
+        let device_private_key = &DEVICE_PRIVATE_KEY;
+        let mut device_key_handle: u16 = 0;
         assert_eq!(0, unsafe {
-            psa::psa_initial_attest_get_token(
-                root_hash.as_ptr() as *const u8,
-                root_hash.len() as u64,
-                device_public_key_hash.as_ref().as_ptr() as *const u8,
-                device_public_key_hash.as_ref().len() as u64,
-                std::ptr::null() as *const u8,
-                0,
-                challenge.as_ptr() as *const u8,
-                challenge.len() as u64,
-                token.as_mut_ptr() as *mut u8,
-                2048,
-                &mut token_len as *mut u64,
+            psa_attestation::psa_initial_attest_load_key(
+                device_private_key.as_ptr(),
+                device_private_key.len() as u64,
+                &mut device_key_handle,
+            )
+        });
+        let mut device_public_key = std::vec::Vec::with_capacity(128);
+        let mut device_public_key_size: u64 = 0;
+        assert_eq!(0, unsafe {
+            psa_attestation::t_cose_sign1_get_verification_pubkey(
+                device_key_handle,
+                device_public_key.as_mut_ptr() as *mut u8,
+                device_public_key.capacity() as u64,
+                &mut device_public_key_size as *mut u64,
             )
         });
         unsafe {
-            token.set_len(token_len as usize)
+            device_public_key.set_len(device_public_key_size as usize)
         };
-        token
-    };
+        device_public_key
+    }
 
-    let proxy_attestation_server_request = transport_protocol::serialize_native_psa_attestation_token(&token, device_id)?;
-    let encoded_str = base64::encode(&proxy_attestation_server_request);
-    let url = format!("{:}/PSA/AttestationToken", proxy_attestation_server_url);
-    crate::post_buffer(&url, &encoded_str)?;
+    pub(super) fn native_attestation(proxy_attestation_server_url: &str) -> Result<i32> {
+        NATIVE_ATTESTATION.call_once(|| {
+            let device_id = native_attestation_once(proxy_attestation_server_url).unwrap();
+            DEVICE_ID.swap(device_id, Ordering::SeqCst);
+        });
+        Ok(DEVICE_ID.load(Ordering::SeqCst))
+    }
 
-    Ok(device_id)
+    fn native_attestation_once(proxy_attestation_server_url: &str) -> Result<i32> {
+
+
+        let proxy_attestation_server_response = crate::send_proxy_attestation_server_start(proxy_attestation_server_url, "psa", FIRMWARE_VERSION)?;
+        assert!(proxy_attestation_server_response.has_psa_attestation_init());
+        let (challenge, device_id) = transport_protocol::parse_psa_attestation_init(
+            proxy_attestation_server_response.get_psa_attestation_init(),
+        )?;
+
+        let root_hash = ROOT_REALM_HASH;
+
+        let token = {
+            let mut token: Vec<u8> = Vec::with_capacity(2048);
+            let mut token_len: u64 = 0;
+            let device_public_key_hash = ring::digest::digest(&ring::digest::SHA256, &get_device_public_key());
+            let enclave_name = "ac40a0c".as_bytes();
+            assert_eq!(0, unsafe {
+                psa_attestation::psa_initial_attest_get_token(
+                    root_hash.as_ptr() as *const u8,
+                    root_hash.len() as u64,
+                    device_public_key_hash.as_ref().as_ptr() as *const u8,
+                    device_public_key_hash.as_ref().len() as u64,
+                    std::ptr::null() as *const u8,
+                    0,
+                    challenge.as_ptr() as *const u8,
+                    challenge.len() as u64,
+                    token.as_mut_ptr() as *mut u8,
+                    2048,
+                    &mut token_len as *mut u64,
+                )
+            });
+            unsafe {
+                token.set_len(token_len as usize)
+            };
+            token
+        };
+
+        let proxy_attestation_server_request = transport_protocol::serialize_native_psa_attestation_token(&token, device_id)?;
+        let encoded_str = base64::encode(&proxy_attestation_server_request);
+        let url = format!("{:}/PSA/AttestationToken", proxy_attestation_server_url);
+        crate::post_buffer(&url, &encoded_str)?;
+
+        Ok(device_id)
+    }
+
+    pub(super) fn proxy_attesation(challenge: &[u8], enclave_cert: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
+        let enclave_hash = &RUNTIME_MANAGER_REALM_HASH;
+
+        let token = {
+            let mut token: Vec<u8> = Vec::with_capacity(2048);
+            let mut token_len: u64 = 0;
+            let enclave_cert_hash = ring::digest::digest(&ring::digest::SHA256, &enclave_cert);
+            let enclave_name = "ac40a0c".as_bytes();
+            assert_eq!(0, unsafe {
+                psa_attestation::psa_initial_attest_get_token(
+                    enclave_hash.as_ptr() as *const u8,
+                    enclave_hash.len() as u64,
+                    enclave_cert_hash.as_ref().as_ptr() as *const u8,
+                    enclave_cert_hash.as_ref().len() as u64,
+                    enclave_name.as_ptr() as *const u8,
+                    enclave_name.len() as u64,
+                    challenge.as_ptr() as *const u8,
+                    challenge.len() as u64,
+                    token.as_mut_ptr() as *mut u8,
+                    2048,
+                    &mut token_len as *mut u64,
+                )
+            });
+            unsafe {
+                token.set_len(token_len as usize)
+            };
+            token
+        };
+
+        Ok((token, get_device_public_key()))
+    }
 }
