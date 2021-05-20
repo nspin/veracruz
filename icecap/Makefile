@@ -28,6 +28,8 @@ veracruz-server-test: setup
 build: runtime-manager veracruz-server-test
 	$(nix_build) $(nix_expression) -A build
 
-# depends on:
-#	../test-collateral having been populated
-# 	../veracruz-server-test/proxy-attestation-server.db having been generated
+# HACK
+.PHONY: before
+before:
+	$(MAKE) -C .. test_cases
+	cd ../veracruz-server-test && sh populate-test-database.sh
