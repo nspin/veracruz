@@ -7,7 +7,7 @@
 
     net.interfaces = lib.optionalAttrs (icecapPlat == "virt") {
       eth1 = {};
-      lo = { static = "127.0.0.1"; 
+      lo = { static = "127.0.0.1"; };
     };
 
     initramfs.extraInitCommands = ''
