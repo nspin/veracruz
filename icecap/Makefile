@@ -1,5 +1,5 @@
-nix_build := nix-build
-nix_shell := nix-shell
+nix_build := nix-build -j $(shell nproc)
+nix_shell := nix-shell -j $(shell nproc) --pure
 nix_expression := ./targets.nix
 
 crates_dir := crates
@@ -18,11 +18,11 @@ setup:
 
 .PHONY: runtime-manager
 runtime-manager: setup
-	$(nix_shell) --pure $(nix_expression) -A runtime-manager --run build
+	$(nix_shell) $(nix_expression) -A runtime-manager --run build
 
 .PHONY: veracruz-server-test
 veracruz-server-test: setup
-	$(nix_shell) --pure $(nix_expression) -A veracruz-server-test --run build
+	$(nix_shell) $(nix_expression) -A veracruz-server-test --run build
 
 .PHONY: build
 build: runtime-manager veracruz-server-test
