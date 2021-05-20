@@ -303,6 +303,12 @@ const EXAMPLE_PRIVATE_KEY: [u8; 32] = [
 const DEVICE_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
 const ROOT_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
 
+use std::sync::{Once, atomic::{AtomicI32, Ordering}};
+
+static DEVICE_ID: AtomicI32 = AtomicI32::new(0);
+
+static NATIVE_ATTESTATION: Once = Once::new();
+
 fn get_device_private_key() -> &'static [u8] {
     DEVICE_PRIVATE_KEY
 }
@@ -333,7 +339,15 @@ fn get_device_public_key() -> Vec<u8> {
     device_public_key
 }
 
-fn native_attestation(proxy_attestation_server_url: &str) -> Result< i32> {
+fn native_attestation(proxy_attestation_server_url: &str) -> Result<i32> {
+    NATIVE_ATTESTATION.call_once(|| {
+        let device_id = native_attestation_once(proxy_attestation_server_url).unwrap();
+        DEVICE_ID.swap(device_id, Ordering::SeqCst);
+    });
+    Ok(DEVICE_ID.load(Ordering::SeqCst))
+}
+
+fn native_attestation_once(proxy_attestation_server_url: &str) -> Result<i32> {
 
     let firmware_version = "0.3.0";
 
