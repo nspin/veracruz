@@ -14,6 +14,8 @@ use bincode::{serialize, deserialize};
 use veracruz_utils::platform::icecap::message::{Request, Response, Header};
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
+use psa_attestation as psa;
+
 const ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
 const RESOURCE_SERVER_ENDPOINT_ENV: &str = "VERACRUZ_RESOURCE_SERVER_ENDPOINT";
 const REALM_ID_ENV: &str = "VERACRUZ_REALM_ID";
@@ -110,8 +112,72 @@ impl VeracruzServer for VeracruzServerIceCap {
         &mut self,
         challenge: Vec<u8>,
     ) -> Result<(Vec<u8>, Vec<u8>, i32)> {
-        let (token, public_key, device_id) = (vec![], vec![], 0);
-        return Ok((token, public_key, device_id));
+        let enclave_cert = self.get_enclave_cert()?;
+
+        let enclave_hash = vec![0; 64];
+
+        let device_private_key = {
+            let rng = ring::rand::SystemRandom::new();
+            let pkcs8 = ring::signature::EcdsaKeyPair::generate_pkcs8(
+                &ring::signature::ECDSA_P256_SHA256_FIXED_SIGNING,
+                &rng,
+            ).unwrap();
+            pkcs8.as_ref()[38..70].to_vec()
+        };
+
+        let device_public_key = {
+            let mut device_key_handle: u16 = 0;
+            assert_eq!(0, unsafe {
+                psa::psa_initial_attest_load_key(
+                    device_private_key.as_ptr(),
+                    device_private_key.len() as u64,
+                    &mut device_key_handle,
+                )
+            });
+            let mut device_public_key = std::vec::Vec::with_capacity(128);
+            let mut device_public_key_size: u64 = 0;
+            assert_eq!(0, unsafe {
+                psa::t_cose_sign1_get_verification_pubkey(
+                    device_key_handle,
+                    device_public_key.as_mut_ptr() as *mut u8,
+                    device_public_key.capacity() as u64,
+                    &mut device_public_key_size as *mut u64,
+                )
+            });
+            unsafe {
+                device_public_key.set_len(device_public_key_size as usize)
+            };
+            device_public_key
+        };
+
+        let token = {
+            let mut token: Vec<u8> = Vec::with_capacity(2048);
+            let mut token_len: u64 = 0;
+            let enclave_cert_hash = ring::digest::digest(&ring::digest::SHA256, &enclave_cert);
+            let enclave_name = "ac40a0c".as_bytes();
+            assert_eq!(0, unsafe {
+                psa::psa_initial_attest_get_token(
+                    enclave_hash.as_ptr() as *const u8,
+                    enclave_hash.len() as u64,
+                    enclave_cert_hash.as_ref().as_ptr() as *const u8,
+                    enclave_cert_hash.as_ref().len() as u64,
+                    enclave_name.as_ptr() as *const u8,
+                    enclave_name.len() as u64,
+                    challenge.as_ptr() as *const u8,
+                    challenge.len() as u64,
+                    token.as_mut_ptr() as *mut u8,
+                    2048,
+                    &mut token_len as *mut u64,
+                )
+            });
+            unsafe {
+                token.set_len(token_len as usize)
+            };
+            token
+        };
+
+        let device_id = 0;
+        return Ok((token, device_public_key, device_id));
     }
 
     fn plaintext_data(&mut self, data: Vec<u8>) -> Result<Option<Vec<u8>>> {
