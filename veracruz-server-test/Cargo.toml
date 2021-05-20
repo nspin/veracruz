@@ -62,8 +62,8 @@ rustls = { git = "https://github.com/veracruz-project/rustls.git", branch = "ver
 
 # TODO_BEFORE_MERGE
 [patch."https://github.com/veracruz-project/ring.git"]
-ring = { path = "../../local/minor-patches/rust/ring", optional = true }
+ring = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/ring.git", rev = "7d1c3533756c16c890a323846c7ebfe5bd2e678a", optional = true }
 [patch."https://github.com/veracruz-project/rust-protobuf.git"]
-protobuf = { path = "../../local/minor-patches/rust/protobuf/protobuf", optional = true }
+protobuf = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/protobuf.git", rev = "5ead137fcbb0157600967eabafa41115b3f68856", optional = true }
 [patch."https://github.com/stepancheg/rust-protobuf.git"]
-protobuf = { path = "../../local/minor-patches/rust/protobuf/protobuf", optional = true }
+protobuf = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/protobuf.git", rev = "5ead137fcbb0157600967eabafa41115b3f68856", optional = true }
