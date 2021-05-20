@@ -269,8 +269,8 @@ mod hack {
         0xc1, 0xd4, 0xee, 0x1c, 0x05, 0x76, 0xa1, 0x44,
     ];
 
-    const RUNTIME_MANAGER_REALM_HASH: &[u8] = &EXAMPLE_HASH;
-    const ROOT_REALM_HASH: &[u8] = &EXAMPLE_HASH;
+    const RUNTIME_MANAGER_HASH: &[u8] = &EXAMPLE_HASH;
+    const ROOT_HASH: &[u8] = &EXAMPLE_HASH;
 
     const DEVICE_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
     const ROOT_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
@@ -318,7 +318,7 @@ mod hack {
             proxy_attestation_server_response.get_psa_attestation_init(),
         )?;
 
-        let root_hash = ROOT_REALM_HASH;
+        let root_hash = ROOT_HASH;
 
         let token = {
             let mut token: Vec<u8> = Vec::with_capacity(2048);
@@ -355,7 +355,7 @@ mod hack {
     }
 
     pub(super) fn proxy_attesation(challenge: &[u8], enclave_cert: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
-        let enclave_hash = &RUNTIME_MANAGER_REALM_HASH;
+        let enclave_hash = &RUNTIME_MANAGER_HASH;
 
         let token = {
             let mut token: Vec<u8> = Vec::with_capacity(2048);
