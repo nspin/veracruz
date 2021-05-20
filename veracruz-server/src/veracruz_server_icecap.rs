@@ -257,7 +257,6 @@ fn lame_err(msg: impl ToString) -> VeracruzServerError {
 
 // HACK
 mod hack {
-    use std::sync::{Once, atomic::{AtomicI32, Ordering}};
     use once_cell::sync::OnceCell;
     use super::Result;
 
