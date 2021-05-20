@@ -2,15 +2,12 @@
 
 { config, pkgs, lib, ... }:
 
-let
-
-in
-
 {
   config = {
 
     net.interfaces = lib.optionalAttrs (icecapPlat == "virt") {
       eth1 = {};
+      lo = { static = "127.0.0.1"; 
     };
 
     initramfs.extraInitCommands = ''
@@ -37,13 +34,10 @@ in
     '' + ''
 
       mkdir /x
-      cp ${proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
+      cp ${instance.proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
 
       test_collateral="$(sed -rn 's,.*test_collateral=([^ ]*).*,\1,p' /proc/cmdline)"
       ln -s "/mnt/$test_collateral" /test-collateral
-
-      # TODO
-      ifconfig lo 127.0.0.1
     '';
 
     initramfs.extraUtilsCommands = ''

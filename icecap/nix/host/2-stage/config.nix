@@ -2,16 +2,17 @@
 
 { config, pkgs, lib, ... }:
 
-let
-
-in
-
 {
   config = {
 
     net.interfaces = lib.optionalAttrs (icecapPlat == "virt") {
       eth1 = {};
+      lo = { static = "127.0.0.1"; 
     };
+
+    env.extraPackages = with pkgs; [
+      icecap.icecap-host
+    ];
 
     initramfs.mntCommands = ''
       ${{
@@ -29,10 +30,6 @@ in
       cp /etc/resolv.conf $target_root/etc
     '';
 
-    env.extraPackages = with pkgs; [
-      icecap.icecap-host
-    ];
-
     initramfs.extraNextInit = ''
       mount -t debugfs none /sys/kernel/debug/
 
@@ -45,10 +42,7 @@ in
     '' + ''
 
       mkdir /x
-      cp ${proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
-
-      # TODO
-      ifconfig lo 127.0.0.1
+      cp ${instance.proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
     '';
 
   };
