@@ -315,8 +315,6 @@ mod hack {
     }
 
     fn native_attestation_once(proxy_attestation_server_url: &str) -> Result<i32> {
-
-
         let proxy_attestation_server_response = crate::send_proxy_attestation_server_start(proxy_attestation_server_url, "psa", FIRMWARE_VERSION)?;
         assert!(proxy_attestation_server_response.has_psa_attestation_init());
         let (challenge, device_id) = transport_protocol::parse_psa_attestation_init(
