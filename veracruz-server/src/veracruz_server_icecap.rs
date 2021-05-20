@@ -11,7 +11,10 @@ use std::{
     process::Command,
 };
 use bincode::{serialize, deserialize};
-use veracruz_utils::platform::icecap::message::{Request, Response, Header};
+use veracruz_utils::{
+    policy::policy::Policy,
+    platform::icecap::message::{Request, Response, Header},
+};
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
 use psa_attestation as psa;
@@ -23,6 +26,8 @@ const REALM_SPEC_ENV: &str = "VERACRUZ_REALM_SPEC";
 const REALM_ENDPOINT_ENV: &str = "VERACRUZ_REALM_ENDPOINT";
 
 const DEFAULT_ICECAP_HOST_COMMAND: &str = "icecap-host";
+
+const ENCLAVE_HASH: [u8; 64] = [0; 64];
 
 type Result<T> = result::Result<T, VeracruzServerError>;
 
@@ -84,11 +89,17 @@ impl Configuration {
 pub struct VeracruzServerIceCap {
     configuration: Configuration,
     realm_handle: Mutex<File>,
+
+    // HACK
+    // device_private_key
 }
 
 impl VeracruzServer for VeracruzServerIceCap {
 
     fn new(policy_json: &str) -> Result<Self> {
+
+        let policy: Policy = Policy::from_json(policy_json)?;
+
         let configuration = Configuration::from_env()?;
         configuration.destroy_realm()?; // HACK
         configuration.create_realm()?;
@@ -114,7 +125,7 @@ impl VeracruzServer for VeracruzServerIceCap {
     ) -> Result<(Vec<u8>, Vec<u8>, i32)> {
         let enclave_cert = self.get_enclave_cert()?;
 
-        let enclave_hash = vec![0; 64];
+        let enclave_hash = &ENCLAVE_HASH;
 
         let device_private_key = {
             let rng = ring::rand::SystemRandom::new();
