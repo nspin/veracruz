@@ -258,6 +258,7 @@ fn lame_err(msg: impl ToString) -> VeracruzServerError {
 // HACK
 mod hack {
     use std::sync::{Once, atomic::{AtomicI32, Ordering}};
+    use once_cell::sync::OnceCell;
     use super::Result;
 
     const EXAMPLE_HASH: [u8; 32] = [0; 32];
@@ -277,8 +278,7 @@ mod hack {
 
     const FIRMWARE_VERSION: &str = "0.3.0";
 
-    static DEVICE_ID: AtomicI32 = AtomicI32::new(0);
-    static NATIVE_ATTESTATION: Once = Once::new();
+    static DEVICE_ID: OnceCell<i32> = OnceCell::new();
 
     fn get_device_public_key() -> Vec<u8> {
         let device_private_key = &DEVICE_PRIVATE_KEY;
@@ -307,11 +307,9 @@ mod hack {
     }
 
     pub(super) fn native_attestation(proxy_attestation_server_url: &str) -> Result<i32> {
-        NATIVE_ATTESTATION.call_once(|| {
-            let device_id = native_attestation_once(proxy_attestation_server_url).unwrap();
-            DEVICE_ID.swap(device_id, Ordering::SeqCst);
-        });
-        Ok(DEVICE_ID.load(Ordering::SeqCst))
+        Ok(*DEVICE_ID.get_or_init(|| {
+            native_attestation_once(proxy_attestation_server_url).unwrap() // HACK
+        }))
     }
 
     fn native_attestation_once(proxy_attestation_server_url: &str) -> Result<i32> {
