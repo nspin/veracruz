@@ -361,7 +361,7 @@ mod hack {
             let mut token: Vec<u8> = Vec::with_capacity(2048);
             let mut token_len: u64 = 0;
             let enclave_cert_hash = ring::digest::digest(&ring::digest::SHA256, &enclave_cert);
-            let enclave_name = "ac40a0c".as_bytes();
+            let enclave_name = "x".as_bytes();
             assert_eq!(0, unsafe {
                 psa_attestation::psa_initial_attest_get_token(
                     enclave_hash.as_ptr() as *const u8,
