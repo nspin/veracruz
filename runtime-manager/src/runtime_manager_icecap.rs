@@ -188,12 +188,12 @@ fn icecap_runtime_init() {
 
 // HACK
 #[no_mangle]
-extern "C" fn fmodf(x: f32, y: f32) -> f32 {
-    libm::fmodf(x, y)
+extern "C" fn fmod(x: f64, y: f64) -> f64 {
+    libm::fmod(x, y)
 }
 
 // HACK
 #[no_mangle]
-extern "C" fn fmod(x: f64, y: f64) -> f64 {
-    libm::fmod(x, y)
+extern "C" fn fmodf(x: f32, y: f32) -> f32 {
+    libm::fmodf(x, y)
 }

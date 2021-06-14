@@ -11,7 +11,6 @@
 
 #![crate_name = "transport_protocol"]
 #![crate_type = "staticlib"]
-#![feature(proc_macro_hygiene)]
 #![cfg_attr(feature = "sgx", no_std)]
 #![cfg_attr(feature = "sgx", feature(rustc_private))]
 
@@ -25,7 +24,6 @@ extern crate sgx_tstd as std;
 // that I cannot fix.
 // It would be better to do this for a specific file, but there
 // does not appear to be a way to do this
-#[generated_module_hack::generated_module]
 #[allow(warnings)]
 pub mod transport_protocol;
 pub mod custom;
