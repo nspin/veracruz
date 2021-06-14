@@ -8,8 +8,8 @@ let
     submodules = true;
   };
 
-  icecapSource = icecapRemote;
-  # icecapSource = icecapLocal;
+  # icecapSource = icecapRemote;
+  icecapSource = icecapLocal;
 
   icecap = import (icecapSource + "/nix");
 
