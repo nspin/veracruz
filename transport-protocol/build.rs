@@ -11,8 +11,6 @@
 
 extern crate protoc_rust;
 
-use std::env;
-
 fn main() {
     println!("cargo:rerun-if-changed=protos/transport_protocol.proto");
 
