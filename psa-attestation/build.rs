@@ -17,16 +17,19 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
-    #[cfg(feature = "tz")]
-    let cc = "/work/rust-optee-trustzone-sdk/optee/toolchains/aarch64/bin/aarch64-linux-gnu-gcc".to_string();
-    #[cfg(feature = "sgx")]
-    let cc = "gcc".to_string();
-    #[cfg(feature = "nitro")]
-    let cc = "musl-gcc".to_string();
-    #[cfg(feature = "icecap")]
-    let cc = env::var("CC").unwrap();
-    #[cfg(not(any(feature = "tz", feature = "sgx", feature = "nitro", feature = "icecap")))]
-    let cc = "gcc".to_string();
+    let cc = {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "tz")] {
+                "/work/rust-optee-trustzone-sdk/optee/toolchains/aarch64/bin/aarch64-linux-gnu-gcc".to_string()
+            } else if #[cfg(feature = "sgx")] {
+                "gcc".to_string()
+            } else if #[cfg(feature = "nitro")] {
+                "musl-gcc".to_string()
+            } else {
+                env::var("CC").unwrap()
+            }
+        }
+    };
 
     let project_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let target_dir = env::var("OUT_DIR").unwrap();
