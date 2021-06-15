@@ -25,17 +25,10 @@ veracruz-server-test: setup
 	$(nix_shell) $(nix_expression) -A veracruz-server-test --run build
 
 .PHONY: build
-build: runtime-manager veracruz-server-test
+build: runtime-manager veracruz-server-test # implicit: before
 	$(nix_build) $(nix_expression) -A build
 
-# HACK
 .PHONY: before
-before:
-	$(MAKE) -C .. test_cases
+before: setup
+	$(MAKE) -C .. sgx test_cases
 	cd ../veracruz-server-test && sh populate-test-database.sh
-
-
-# NOTES
-# rustup target add x86_64-unknown-linux-musl
-# make sgx
-# make nitro
