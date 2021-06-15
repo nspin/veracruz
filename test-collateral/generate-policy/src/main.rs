@@ -541,7 +541,7 @@ fn compute_nitro_enclave_hash(arguments: &Arguments) -> Option<String> {
 
 // HACK attestation not yet implemented for IceCap
 fn compute_icecap_enclave_hash(arguments: &Arguments) -> Option<String> {
-    Some((0..64).map(|_| "0").collect::<String>())
+    Some("deadbeefdeadbeefdeadbeefdeadbeeff00dcafef00dcafef00dcafef00dcafe".to_string())
 }
 
 /// Serializes the identities of all principals in the Veracruz computation into

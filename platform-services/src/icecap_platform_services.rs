@@ -20,7 +20,7 @@ static STATE: AtomicU64 = AtomicU64::new(0);
 pub fn platform_getrandom(buffer: &mut [u8]) -> Result {
     for b in buffer {
         let state = STATE.fetch_add(1, Ordering::SeqCst);
-        *b = state.to_ne_bytes()[(state & 8) as usize];
+        *b = state.to_ne_bytes()[(state & 0b111) as usize];
     }
     Result::Success
 }
