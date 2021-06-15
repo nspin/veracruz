@@ -66,5 +66,5 @@ lto = true
 
 # TODO_BEFORE_MERGE
 [patch."https://github.com/veracruz-project/ring.git"]
-ring = { git = "https://github.com/nspin/veracruz-project-ring.git", ref = "pr/initial-icecap-stubs", optional = true }
+ring = { git = "https://github.com/nspin/veracruz-project-ring.git", branch = "pr/initial-icecap-stubs", optional = true }
 # ring = { path = "/home/x/i/v/iv/keep/local/minor-patches/rust/ring", optional = true }
