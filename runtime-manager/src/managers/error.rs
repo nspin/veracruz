@@ -17,7 +17,7 @@ use std::sync::PoisonError;
 #[cfg(feature = "sgx")]
 use std::sync::PoisonError;
 #[cfg(feature = "nitro")]
-use veracruz_utils::platform::{NitroRootEnclaveMessage, VeracruzSocketError};
+use veracruz_utils::nitro::{NitroRootEnclaveMessage, VeracruzSocketError};
 
 #[derive(Debug, Error)]
 pub enum RuntimeManagerError {

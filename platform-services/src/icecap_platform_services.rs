@@ -9,16 +9,18 @@
 //! See the `LICENSE.markdown` file in the Veracruz root directory for
 //! information on licensing and copyright.
 
-use core::sync::atomic::{AtomicU8, Ordering};
+use core::sync::atomic::{AtomicU64, Ordering};
 use crate::Result;
 
 // HACK
+// Placeholder generator with a fixed seed and a period of 2**61
 
-static RNG_STATE: AtomicU8 = AtomicU8::new(0);
+static STATE: AtomicU64 = AtomicU64::new(0);
 
 pub fn platform_getrandom(buffer: &mut [u8]) -> Result {
     for b in buffer {
-        *b = RNG_STATE.fetch_add(1, Ordering::SeqCst);
+        let state = STATE.fetch_add(1, Ordering::SeqCst);
+        *b = state.to_ne_bytes()[(state & 8) as usize];
     }
     Result::Success
 }
