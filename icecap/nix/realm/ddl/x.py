@@ -12,7 +12,7 @@ class RuntimeManager(GenericElfComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(affinity=2, *args, **kwargs)
         self._arg = {
-                'host_ring_buffer': self.map_ring_buffer_with(host_rb, mapped=True),
+            'host_ring_buffer': self.map_ring_buffer_with(host_rb, mapped=True),
             }
 
     def arg_json(self):
