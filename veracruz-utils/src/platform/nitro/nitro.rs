@@ -12,8 +12,6 @@
 
 use serde::{Deserialize, Serialize};
 
-pub use crate::io::error::SocketError as VeracruzSocketError;
-
 /// The Status value returned by the Nitro enclave for operations
 /// This is intended to be received as a bincode serialized
 /// `NitroRootEnclaveMessage::Status`

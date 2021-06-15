@@ -19,8 +19,8 @@ use std::convert::TryInto;
 use std::os::unix::io::AsRawFd;
 use std::os::unix::io::RawFd;
 use veracruz_utils::{
-    io::{raw_fd::{receive_buffer, send_buffer}, vsocket},
-    platform::nitro::nitro::{NitroRootEnclaveMessage, NitroStatus, RuntimeManagerMessage},
+    receive_buffer, send_buffer, vsocket, NitroRootEnclaveMessage, NitroStatus,
+    RuntimeManagerMessage,
 };
 
 use crate::managers;
@@ -217,7 +217,7 @@ fn get_psa_attestation_token(
         bincode::serialize(&nre_message).map_err(|err| RuntimeManagerError::BincodeError(err))?;
 
     // send the buffer back to the Veracruz server via an ocall
-    let vsocksocket = vsocket::VsockSocket::connect(HOST_CID, OCALL_PORT)
+    let vsocksocket = vsocket::vsock_connect(HOST_CID, OCALL_PORT)
         .map_err(|err| RuntimeManagerError::SocketError(err))?;
     send_buffer(vsocksocket.as_raw_fd(), &nre_message_buffer)
         .map_err(|err| RuntimeManagerError::VeracruzSocketError(err))?;

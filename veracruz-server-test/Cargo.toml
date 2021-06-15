@@ -38,7 +38,7 @@ openssl = "0.10.24"
 rand = "0.7.0"
 proxy-attestation-server = { path = "../proxy-attestation-server" }
 psa-attestation = { path = "../psa-attestation"}
-hex = "=0.4.2"
+hex = "=0.4.2"]
 pinecone = "0.2"
 futures = "0.3"
 actix-rt = "1.1.1"
@@ -59,3 +59,5 @@ sgx_alloc = { branch="veracruz", git = 'https://github.com/veracruz-project/incu
 
 [patch.crates-io]
 rustls = { git = "https://github.com/veracruz-project/rustls.git", branch = "veracruz" }
+
+

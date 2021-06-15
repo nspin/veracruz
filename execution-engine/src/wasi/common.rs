@@ -1272,12 +1272,12 @@ impl From<anyhow::Error> for FatalEngineError {
     }
 }
 
-// #[cfg(any(feature = "std", feature = "nitro"))]
-// impl From<wasmtime::Trap> for FatalEngineError {
-//     fn from(error: wasmtime::Trap) -> Self {
-//         FatalEngineError::WasmtimeTrapError(format!("{:?}", error))
-//     }
-// }
+#[cfg(any(feature = "std", feature = "nitro"))]
+impl From<wasmtime::Trap> for FatalEngineError {
+    fn from(error: wasmtime::Trap) -> Self {
+        FatalEngineError::WasmtimeTrapError(format!("{:?}", error))
+    }
+}
 
 impl From<WasiAPIName> for FatalEngineError {
     fn from(error: WasiAPIName) -> Self {
