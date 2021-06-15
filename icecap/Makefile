@@ -33,3 +33,9 @@ build: runtime-manager veracruz-server-test
 before:
 	$(MAKE) -C .. test_cases
 	cd ../veracruz-server-test && sh populate-test-database.sh
+
+
+# NOTES
+# rustup target add x86_64-unknown-linux-musl
+# make sgx
+# make nitro
