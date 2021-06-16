@@ -12,6 +12,14 @@
 //! See the `LICENSE.markdown` file in the Veracruz root directory for
 //! information on licensing and copyright.
 
+// TODO_BEFORE_MERGE
+#[cfg(test)]
+#[cfg(feature = "icecap")]
+#[ctor::ctor]
+fn init() {
+    env_logger::init();
+}
+
 mod tests {
     use actix_rt::System;
     use base64;
