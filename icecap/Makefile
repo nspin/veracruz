@@ -1,10 +1,14 @@
-nix_build := nix-build -j $(shell nproc)
-nix_shell := nix-shell -j $(shell nproc) --pure
-nix_expression := targets.nix
-
 crates_dir := crates
 build_dir := build
 now := $(build_dir)/NOW
+
+nix_binary_cache_url := http://3.15.43.242:5000
+nix_binary_cache_public_key := veracruz:Z2ZA6WY8g/IN7OAGUkZeMD6pnz6jQWYFvJKzP7IoN48=
+nix_binary_cache_flags := --option extra-substituters $(nix_binary_cache_url) --option extra-trusted-public-keys $(nix_binary_cache_public_key)
+
+nix_build := nix-build $(nix_binary_cache_flags) -j $(shell nproc)
+nix_shell := nix-shell $(nix_binary_cache_flags) -j $(shell nproc) --pure
+nix_expression := targets.nix
 
 .PHONY: all
 all:
