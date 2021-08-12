@@ -49,6 +49,7 @@ sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.g
 sgx_tcrypto = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 sgx_tdh = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 wasi-types = { git = "https://github.com/veracruz-project/wasi-types.git", branch = "veracruz" }
+bitflags = "=1.2.1"
 icecap-core = { path = "../icecap/crates/icecap-core", optional = true }
 icecap-start-generic = { path = "../icecap/crates/icecap-start-generic", optional = true }
 icecap-std-external = { path = "../icecap/crates/icecap-std-external", optional = true }
