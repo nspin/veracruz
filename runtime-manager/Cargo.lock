@@ -404,6 +404,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "biterate"
+version = "0.1.0"
+dependencies = [
+ "num",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -745,6 +752,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "finite-set"
+version = "0.1.0"
+dependencies = [
+ "finite-set-derive",
+]
+
+[[package]]
+name = "finite-set-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 1.0.29",
+ "quote 1.0.9",
+ "syn 1.0.77",
+ "synstructure",
+]
+
+[[package]]
 name = "flate2"
 version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1055,6 +1079,7 @@ version = "0.1.0"
 dependencies = [
  "icecap-backtrace-collect",
  "icecap-backtrace-types",
+ "icecap-runtime",
 ]
 
 [[package]]
@@ -1095,15 +1120,29 @@ dependencies = [
 name = "icecap-core"
 version = "0.1.0"
 dependencies = [
+ "biterate",
+ "finite-set",
  "icecap-backtrace",
  "icecap-config",
  "icecap-failure",
  "icecap-logger",
  "icecap-ring-buffer",
+ "icecap-rpc",
+ "icecap-rpc-sel4",
  "icecap-runtime",
  "icecap-sel4",
  "icecap-start",
  "icecap-sync",
+]
+
+[[package]]
+name = "icecap-event-server-types"
+version = "0.1.0"
+dependencies = [
+ "biterate",
+ "finite-set",
+ "icecap-rpc",
+ "serde 1.0.130",
 ]
 
 [[package]]
@@ -1141,7 +1180,23 @@ dependencies = [
  "icecap-config",
  "icecap-sel4",
  "log 0.4.14",
- "register",
+ "tock-registers",
+]
+
+[[package]]
+name = "icecap-rpc"
+version = "0.1.0"
+dependencies = [
+ "pinecone",
+ "serde 1.0.130",
+]
+
+[[package]]
+name = "icecap-rpc-sel4"
+version = "0.1.0"
+dependencies = [
+ "icecap-rpc",
+ "icecap-sel4",
 ]
 
 [[package]]
@@ -2246,15 +2301,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 
 [[package]]
-name = "register"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4a247de29ab7cc8f5006cfe775c4a81c704f9914c5e2a79696862e643135433"
-dependencies = [
- "tock-registers",
-]
-
-[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2296,12 +2342,14 @@ name = "runtime_manager_enclave"
 version = "0.3.0"
 dependencies = [
  "bincode",
+ "biterate",
  "bitflags",
  "byteorder 1.4.3",
  "err-derive",
  "execution-engine",
  "hex",
  "icecap-core",
+ "icecap-event-server-types",
  "icecap-start-generic",
  "icecap-std-external",
  "lazy_static",
@@ -2947,9 +2995,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tock-registers"
-version = "0.6.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f521a79accce68c417c9c77ce22108056b626126da1932f7e2e9b5bbffee0cea"
+checksum = "70323afdb8082186c0986da0e10f6e4ed103d681c921c00597e98d9806dac20f"
 
 [[package]]
 name = "tokio"

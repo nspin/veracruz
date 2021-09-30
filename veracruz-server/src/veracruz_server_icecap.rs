@@ -19,7 +19,7 @@ use std::{
     result,
     sync::Mutex,
     string::ToString,
-    process::Command,
+    process::{Command, Child},
 };
 use err_derive::Error;
 use bincode::{serialize, deserialize};
@@ -29,13 +29,12 @@ use veracruz_utils::{
 };
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
-const ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
-const RESOURCE_SERVER_ENDPOINT_ENV: &str = "VERACRUZ_RESOURCE_SERVER_ENDPOINT";
-const REALM_ID_ENV: &str = "VERACRUZ_REALM_ID";
-const REALM_SPEC_ENV: &str = "VERACRUZ_REALM_SPEC";
-const REALM_ENDPOINT_ENV: &str = "VERACRUZ_REALM_ENDPOINT";
+const VERACRUZ_ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
+const VERACRUZ_ICECAP_REALM_ID_ENV: &str = "VERACRUZ_ICECAP_REALM_ID";
+const VERACRUZ_ICECAP_REALM_SPEC_ENV: &str = "VERACRUZ_ICECAP_REALM_SPEC";
+const VERACRUZ_ICECAP_REALM_ENDPOINT_ENV: &str = "VERACRUZ_ICECAP_REALM_ENDPOINT";
 
-const DEFAULT_ICECAP_HOST_COMMAND: &str = "icecap-host";
+const VERACRUZ_ICECAP_HOST_COMMAND_DEFAULT: &str = "icecap-host";
 
 type Result<T> = result::Result<T, VeracruzServerError>;
 
@@ -53,7 +52,6 @@ pub enum IceCapError {
 
 struct Configuration {
     icecap_host_command: PathBuf,
-    resource_server_endpoint: PathBuf,
     realm_id: usize,
     realm_spec: PathBuf,
     realm_endpoint: PathBuf,
@@ -67,38 +65,53 @@ impl Configuration {
 
     fn from_env() -> Result<Self> {
         Ok(Self {
-            icecap_host_command: Self::env_var(ICECAP_HOST_COMMAND_ENV).map(PathBuf::from).unwrap_or(DEFAULT_ICECAP_HOST_COMMAND.into()),
-            resource_server_endpoint: Self::env_var(RESOURCE_SERVER_ENDPOINT_ENV)?.into(),
-            realm_id: Self::env_var(REALM_ID_ENV)?.parse::<usize>().map_err(|_|
-                VeracruzServerError::IceCapError(IceCapError::InvalidEnvironemntVariableValue { variable: REALM_ID_ENV.to_string() })
+            icecap_host_command: Self::env_var(VERACRUZ_ICECAP_HOST_COMMAND_ENV).map(PathBuf::from).unwrap_or(VERACRUZ_ICECAP_HOST_COMMAND_DEFAULT.into()),
+            realm_id: Self::env_var(VERACRUZ_ICECAP_REALM_ID_ENV)?.parse::<usize>().map_err(|_|
+                VeracruzServerError::IceCapError(IceCapError::InvalidEnvironemntVariableValue { variable: VERACRUZ_ICECAP_REALM_ID_ENV.to_string() })
             )?,
-            realm_spec: Self::env_var(REALM_SPEC_ENV)?.into(),
-            realm_endpoint: Self::env_var(REALM_ENDPOINT_ENV)?.into(),
+            realm_spec: Self::env_var(VERACRUZ_ICECAP_REALM_SPEC_ENV)?.into(),
+            realm_endpoint: Self::env_var(VERACRUZ_ICECAP_REALM_ENDPOINT_ENV)?.into(),
         })
     }
 
+    fn hack_command() -> Command {
+        let mut command = Command::new("taskset");
+        command.arg("0x2");
+        command
+    }
+
+    fn hack_ensure_not_realm_running() {
+        Command::new("pkill").arg("icecap-host").status().unwrap();
+    }
+
     fn create_realm(&self) -> Result<()> {
-        let status = Command::new(&self.icecap_host_command)
+        let status = Self::hack_command()
+            .arg(&self.icecap_host_command)
             .arg("create")
             .arg(format!("{}", self.realm_id))
             .arg(&self.realm_spec)
-            .arg(&self.resource_server_endpoint)
             .status().unwrap();
         assert!(status.success());
         Ok(())
     }
-    
-    fn run_realm(&self) -> Result<()> {
-        let status = Command::new(&self.icecap_host_command)
-            .arg("hack-run")
+
+    fn run_realm(&self) -> Result<Child> {
+        let virtual_node_id: usize = 0;
+        let child = Self::hack_command()
+            .arg(&self.icecap_host_command)
+            .arg("run")
             .arg(format!("{}", self.realm_id))
-            .status().unwrap();
-        assert!(status.success());
-        Ok(())
+            .arg(format!("{}", virtual_node_id))
+            .spawn().unwrap();
+        Ok(child)
     }
-    
+
     fn destroy_realm(&self) -> Result<()> {
-        let status = Command::new(&self.icecap_host_command)
+        // HACK clean up in case of previous failure
+        Self::hack_ensure_not_realm_running();
+
+        let status = Self::hack_command()
+            .arg(&self.icecap_host_command)
             .arg("destroy")
             .arg(format!("{}", self.realm_id))
             .status().unwrap();
@@ -110,7 +123,8 @@ impl Configuration {
 
 pub struct VeracruzServerIceCap {
     configuration: Configuration,
-    realm_handle: Mutex<File>,
+    realm_channel: Mutex<File>,
+    realm_process: Child,
 
     // HACK
     device_id: i32,
@@ -127,14 +141,15 @@ impl VeracruzServer for VeracruzServerIceCap {
         let configuration = Configuration::from_env()?;
         configuration.destroy_realm()?; // HACK
         configuration.create_realm()?;
-        configuration.run_realm()?;
-        let realm_handle = Mutex::new(
+        let realm_process = configuration.run_realm()?;
+        let realm_channel = Mutex::new(
             OpenOptions::new().read(true).write(true).open(&configuration.realm_endpoint)
                 .map_err(|_| VeracruzServerError::IceCapError(IceCapError::RealmChannelError))?
         );
         let server = Self {
             configuration,
-            realm_handle,
+            realm_channel,
+            realm_process,
             device_id,
         };
         match server.send(&Request::New { policy_json: policy_json.to_string() })? {
@@ -231,6 +246,7 @@ impl VeracruzServer for VeracruzServerIceCap {
     }
 
     fn close(&mut self) -> Result<bool> {
+        self.realm_process.kill().unwrap();
         self.configuration.destroy_realm()?;
         Ok(true)
     }
@@ -249,14 +265,14 @@ impl VeracruzServerIceCap {
     fn send(&self, request: &Request) -> Result<Response> {
         let msg = serialize(request).unwrap();
         let header = (msg.len() as Header).to_le_bytes();
-        let mut realm_handle = self.realm_handle.lock().unwrap();
-        realm_handle.write(&header).unwrap();
-        realm_handle.write(&msg).unwrap();
+        let mut realm_channel = self.realm_channel.lock().unwrap();
+        realm_channel.write(&header).unwrap();
+        realm_channel.write(&msg).unwrap();
         let mut header_bytes = [0; size_of::<Header>()];
-        realm_handle.read_exact(&mut header_bytes).unwrap();
+        realm_channel.read_exact(&mut header_bytes).unwrap();
         let header = u32::from_le_bytes(header_bytes);
         let mut resp_bytes = vec![0; header as usize];
-        realm_handle.read_exact(&mut resp_bytes).unwrap();
+        realm_channel.read_exact(&mut resp_bytes).unwrap();
         let resp = deserialize(&resp_bytes).unwrap();
         Ok(resp)
     }

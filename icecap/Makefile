@@ -1,5 +1,7 @@
 crates_dir := crates
 build_dir := build
+nix_root := nix-root
+
 now := $(build_dir)/NOW
 
 nix_binary_cache_url := http://52.214.93.220:5000
@@ -8,8 +10,8 @@ nix_binary_cache_flags := \
 	--option extra-substituters $(nix_binary_cache_url) \
 	--option extra-trusted-public-keys $(nix_binary_cache_public_key)
 
-nix_build := nix-build $(nix_binary_cache_flags) -j $(shell nproc)
-nix_shell := nix-shell $(nix_binary_cache_flags) -j $(shell nproc) --pure
+nix_build := nix-build $(nix_binary_cache_flags) -j$(shell nproc)
+nix_shell := nix-shell $(nix_binary_cache_flags) -j$(shell nproc) --pure
 nix_expression := targets.nix
 
 export NIX_BUILD_SHELL := bash
@@ -20,6 +22,14 @@ all:
 .PHONY: clean
 clean:
 	rm -rf $(crates_dir) $(build_dir)
+
+# NOTE To be run outside of Docker the container.
+.PHONY: deep-clean
+deep-clean: clean
+	if [ -d $(nix_root) ]; then \
+		chmod -R u+w $(nix_root); \
+		rm -rf $(nix_root); \
+	fi
 
 .PHONY: setup
 setup:

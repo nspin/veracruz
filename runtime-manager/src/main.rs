@@ -12,6 +12,7 @@
 #![cfg_attr(any(feature = "tz", feature = "icecap"), no_main)]
 #![crate_name = "runtime_manager_enclave"]
 #![feature(rustc_private)]
+#![feature(format_args_nl)]
 
 #[cfg(feature = "tz")]
 pub mod runtime_manager_trustzone;
