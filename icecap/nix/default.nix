@@ -8,10 +8,10 @@ let
     submodules = true;
   };
 
-  icecapSource = icecapRemote;
-  # icecapSource = icecapLocal;
+  # icecapSource = icecapRemote;
+  icecapSource = icecapLocal;
 
-  icecap = import (icecapSource + "/nix");
+  icecap = import icecapSource;
 
   plats = icecap.none.icecap.byIceCapPlat (plat:
     with icecap.instances.${plat}; mkBasicInstance configs.icecap ./instance.nix);
