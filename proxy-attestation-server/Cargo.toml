@@ -27,7 +27,7 @@ psa = []
 nitro = [ "serde_cbor", "nitro-enclave-token" ]
 
 [dependencies]
-rouille = "3.0"
+rouille = "=3.2.1"
 lazy_static = "1.3"
 base64 = "0.10"
 transport-protocol = { path = "../transport-protocol" }
