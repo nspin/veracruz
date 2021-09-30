@@ -13,9 +13,10 @@ let
 
   icecap = import icecapSource;
 
-  plats = icecap.none.icecap.byIceCapPlat (plat:
-    with icecap.instances.${plat}; mkBasicInstance configs.icecap ./instance.nix);
+  plats = with icecap; lib.flip lib.mapAttrs pkgs.none.icecap.configured (_: configured:
+    import ./instance.nix {
+      inherit lib pkgs configured;
+    }
+  );
 
-in plats // {
-  inherit icecap;
-}
+in icecap // plats

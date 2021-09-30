@@ -1,12 +1,36 @@
-{ lib, runCommand
-, nukeReferences
-, icecapPlat, pkgs_linux
-, nixosLite, linuxKernel, uBoot
-, mkIceDL, mkDynDLSpec, stripElfSplit
-, crateUtils, globalCrates
-, mkInstance
-}:
+{ lib, pkgs, configured }:
 
+let
+
+  inherit (pkgs.none)
+    runCommand
+    nukeReferences
+    ;
+
+  inherit (pkgs.none.icecap)
+    stripElfSplit
+    crateUtils
+    ;
+
+  inherit (pkgs.linux.icecap)
+    linuxKernel
+    uBoot
+    nixosLite
+    ;
+
+  inherit (configured)
+    icecapPlat
+    mkIceDL
+    mkDynDLSpec 
+    globalCrates
+    ;
+
+  inherit (pkgs.none.icecap) platUtils;
+  inherit (configured)
+    icecapFirmware selectIceCapPlatOr
+    mkLinuxRealm;
+
+in
 let
   host2Stage = false;
 
@@ -21,44 +45,36 @@ let
 
   now = builtins.readFile ../build/NOW;
 
-in
-mkInstance (self: with self; {
+in lib.fix (self: with self; {
 
   inherit proxyAttestationServerTestDatabase testElf;
 
-  payload = uBoot.${icecapPlat}.mkDefaultPayload {
-    dtb = composition.host-dtb;
-    linuxImage = linuxKernel.host.${icecapPlat}.kernel;
-    initramfs = (if host2Stage then nx2Stage else nx1Stage).config.build.initramfs;
-    bootargs = [
-      "earlycon=icecap_vmm"
-      "console=hvc0"
-      "loglevel=7"
-    ] ++ (if host2Stage then [
-      "next_init=${nx2Stage.config.build.nextInit}"
-    ] else [
-      "spec=${spec}"
-      "test_collateral=${testCollateral}"
-    ]);
+  run = platUtils.${icecapPlat}.bundle {
+    firmware = icecapFirmware.image;
+    payload = icecapFirmware.mkDefaultPayload {
+      linuxImage = pkgs.linux.icecap.linuxKernel.host.${icecapPlat}.kernel;
+      initramfs = hostUser.config.build.initramfs;
+      bootargs = [
+        "earlycon=icecap_vmm"
+        "console=hvc0"
+        "loglevel=7"
+        "spec=${spec}"
+        "test_collateral=${testCollateral}"
+      ];
+    };
+    platArgs = selectIceCapPlatOr {} {
+      rpi4 = {
+        extraBootPartitionCommands = ''
+          ln -s ${spec} $out/spec.bin
+          ln -s ${testCollateral} $out/test-collateral
+        '';
+      };
+    };
   };
 
-  icecapPlatArgs.rpi4.extraBootPartitionCommands = ''
-    ln -s ${spec} $out/spec.bin
-    ln -s ${test-collateral} $out/test-collateral
-  '';
-
-  nx1Stage = pkgs_linux.nixosLite.mk1Stage {
+  hostUser = pkgs.linux.icecap.nixosLite.eval {
     modules = [
-      (import ./host/1-stage/config.nix {
-        inherit icecapPlat now;
-        instance = self;
-      })
-    ];
-  };
-
-  nx2Stage = pkgs_linux.nixosLite.mk2Stage {
-    modules = [
-      (import ./host/2-stage/config.nix {
+      (import ./host/config.nix {
         inherit icecapPlat now;
         instance = self;
       })
@@ -79,21 +95,21 @@ mkInstance (self: with self; {
     };
   };
 
-  icecapCratesAttrs = crateUtils.flatDepsWithRoots (with globalCrates; [
+  icecapCratesAttrs = crateUtils.closure' (with globalCrates; [
     icecap-core
     icecap-start-generic
     icecap-std-external
     generated-module-hack
   ]);
 
-  icecapCrates = crateUtils.collectLocal (lib.attrValues icecapCratesAttrs);
+  icecapCrates = crateUtils.collectEnv (lib.attrValues icecapCratesAttrs);
 
   env = {
-    runtime-manager = callPackage ./binaries/runtime-manager.nix {};
-    veracruz-server-test = pkgs_linux.icecap.callPackage ./binaries/test.nix {} {
+    runtime-manager = pkgs.none.icecap.callPackage ./binaries/runtime-manager.nix {};
+    veracruz-server-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-server-test";
     };
-    veracruz-test = pkgs_linux.icecap.callPackage ./binaries/test.nix {} {
+    veracruz-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-test";
     };
   };
@@ -116,8 +132,8 @@ mkInstance (self: with self; {
     ];
   };
 
-  test2Stage = lib.mapAttrs (k: v: pkgs_linux.writeScript "${k}.sh" ''
-    #!${pkgs_linux.runtimeShell}
+  test2Stage = lib.mapAttrs (k: v: pkgs.linux.writeScript "${k}.sh" ''
+    #!${pkgs.linux.runtimeShell}
     cd /x
     ln -sf ${testCollateral} /test-collateral
     RUST_LOG=debug \
