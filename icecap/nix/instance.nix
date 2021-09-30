@@ -2,37 +2,18 @@
 
 let
 
-  inherit (pkgs.none)
-    runCommand
-    nukeReferences
-    ;
-
-  inherit (pkgs.none.icecap)
-    stripElfSplit
-    crateUtils
-    ;
-
-  inherit (pkgs.linux.icecap)
-    linuxKernel
-    uBoot
-    nixosLite
-    ;
+  inherit (pkgs.none) runCommand nukeReferences;
+  inherit (pkgs.none.icecap) crateUtils stripElfSplit platUtils;
+  inherit (pkgs.linux.icecap) linuxKernel nixosLite;
 
   inherit (configured)
-    icecapPlat
-    mkIceDL
-    mkDynDLSpec 
+    icecapFirmware
+    icecapPlat selectIceCapPlatOr
+    mkIceDL mkDynDLSpec 
     globalCrates
     ;
 
-  inherit (pkgs.none.icecap) platUtils;
-  inherit (configured)
-    icecapFirmware selectIceCapPlatOr
-    mkLinuxRealm;
-
-in
-let
-  host2Stage = false;
+  now = builtins.readFile ../build/NOW;
 
   runtimeManagerEnclaveElf = ../build/runtime-manager/out/runtime_manager_enclave.elf;
 
@@ -42,8 +23,6 @@ let
   };
 
   proxyAttestationServerTestDatabase = ../../veracruz-server-test/proxy-attestation-server.db;
-
-  now = builtins.readFile ../build/NOW;
 
 in lib.fix (self: with self; {
 
@@ -72,7 +51,7 @@ in lib.fix (self: with self; {
     };
   };
 
-  hostUser = pkgs.linux.icecap.nixosLite.eval {
+  hostUser = nixosLite.eval {
     modules = [
       (import ./host/config.nix {
         inherit icecapPlat now;
@@ -131,18 +110,5 @@ in lib.fix (self: with self; {
       ".*\\.dat"
     ];
   };
-
-  test2Stage = lib.mapAttrs (k: v: pkgs.linux.writeScript "${k}.sh" ''
-    #!${pkgs.linux.runtimeShell}
-    cd /x
-    ln -sf ${testCollateral} /test-collateral
-    RUST_LOG=debug \
-    DATABASE_URL=proxy-attestation-server.db \
-    VERACRUZ_RESOURCE_SERVER_ENDPOINT=file:/dev/rb_resource_server \
-    VERACRUZ_REALM_ID=0 \
-    VERACRUZ_REALM_SPEC=${spec} \
-    VERACRUZ_REALM_ENDPOINT=/dev/rb_realm \
-      ${v} --test-threads=1 "$@"
-  '') testElf;
 
 })
