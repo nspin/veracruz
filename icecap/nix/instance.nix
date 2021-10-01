@@ -7,11 +7,9 @@ let
   inherit (pkgs.linux.icecap) linuxKernel nixosLite;
 
   inherit (configured)
-    icecapFirmware
-    icecapPlat selectIceCapPlatOr
+    icecapFirmware icecapPlat selectIceCapPlatOr
     mkIceDL mkDynDLSpec 
-    globalCrates
-    ;
+    globalCrates;
 
   now = builtins.readFile ../build/NOW;
 
@@ -25,6 +23,8 @@ let
   proxyAttestationServerTestDatabase = ../../veracruz-server-test/proxy-attestation-server.db;
 
 in lib.fix (self: with self; {
+
+  inherit configured;
 
   inherit proxyAttestationServerTestDatabase testElf;
 
@@ -84,7 +84,9 @@ in lib.fix (self: with self; {
   icecapCrates = crateUtils.collectEnv (lib.attrValues icecapCratesAttrs);
 
   env = {
-    runtime-manager = pkgs.none.icecap.callPackage ./binaries/runtime-manager.nix {};
+    runtime-manager = configured.callPackage ./binaries/runtime-manager.nix {
+      inherit icecapCratesAttrs;
+    };
     veracruz-server-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-server-test";
     };
