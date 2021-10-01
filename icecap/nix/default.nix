@@ -1,6 +1,4 @@
 let
-  icecapLocal = ../../../icecap;
-
   icecapRemote = builtins.fetchGit rec {
     url = "https://gitlab.com/arm-research/security/icecap/icecap.git";
     ref = "veracruz";
@@ -8,15 +6,17 @@ let
     submodules = true;
   };
 
+  icecapLocal = ../../../icecap;
+
   # icecapSource = icecapRemote;
   icecapSource = icecapLocal;
 
   icecap = import icecapSource;
 
-  plats = with icecap; lib.flip lib.mapAttrs pkgs.none.icecap.configured (_: configured:
+  instances = with icecap; lib.flip lib.mapAttrs pkgs.none.icecap.configured (_: configured:
     import ./instance.nix {
       inherit lib pkgs configured;
     }
   );
 
-in icecap // plats
+in icecap // instances

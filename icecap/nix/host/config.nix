@@ -3,7 +3,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  executableInContext = name: file: pkgs.runCommand "veracruz-server-test" {} ''
+  executableInContext = name: file: pkgs.runCommand name {} ''
     mkdir -p $out/bin
     cp ${file} $out/bin/${name}
   '';
