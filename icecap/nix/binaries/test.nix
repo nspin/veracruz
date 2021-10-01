@@ -1,6 +1,6 @@
 { lib, stdenv, hostPlatform, buildPackages, mkShell
 , llvmPackages
-, cargo, git, cacert
+, rustc, cargo, git, cacert
 , pkgconfig, protobuf, perl, python3
 , openssl, sqlite
 , crateUtils, nixToToml
@@ -36,7 +36,7 @@ mkShell (crateUtils.baseEnv // rec {
   ];
 
   nativeBuildInputs = [
-    cargo git cacert
+    rustc cargo git cacert
     pkgconfig protobuf perl python3
   ];
 

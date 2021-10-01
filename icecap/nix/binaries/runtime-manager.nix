@@ -1,5 +1,5 @@
 { lib, stdenv, hostPlatform, buildPackages, mkShell
-, cargo, git, cacert
+, rustc, cargo, git, cacert
 , protobuf, perl
 , crateUtils, nixToToml
 , liboutline, sysroot-rs
@@ -33,7 +33,7 @@ mkShell (crateUtils.baseEnv // {
   ];
 
   nativeBuildInputs = [
-    cargo git cacert
+    rustc cargo git cacert
     protobuf perl
   ];
 
