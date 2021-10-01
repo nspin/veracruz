@@ -11,12 +11,14 @@
 let
   libclang = (llvmPackages.libclang.nativeDrv or llvmPackages.libclang).lib;
 
-  cargoConfig = crateUtils.clobber [
+  cargoConfig = nixToToml (crateUtils.clobber [
     crateUtils.baseCargoConfig
-  ];
+  ]);
 
   # debug = true;
   debug = false;
+
+  manifestPath = toString ../../.. + "/${name}/Cargo.toml";
 
 in
 
@@ -24,7 +26,6 @@ mkShell (crateUtils.baseEnv // rec {
 
   inherit name;
 
-  NIX_HACK_CARGO_CONFIG = nixToToml cargoConfig;
   PKG_CONFIG_ALLOW_CROSS = 1;
   LIBCLANG_PATH = "${libclang}/lib";
 
@@ -46,11 +47,11 @@ mkShell (crateUtils.baseEnv // rec {
 
   shellHook = ''
     # From: https://github.com/NixOS/nixpkgs/blob/1fab95f5190d087e66a3502481e34e15d62090aa/pkgs/applications/networking/browsers/firefox/common.nix#L247-L253
-    # Set C flags for Rust's bindgen program. Unlike ordinary C
-    # compilation, bindgen does not invoke $CC directly. Instead it
-    # uses LLVM's libclang. To make sure all necessary flags are
-    # included we need to look in a few places.
-    export BINDGEN_EXTRA_CLANG_ARGS="$(< ${stdenv.cc}/nix-support/libc-crt1-cflags) \
+    # Set C flags for bindgen. Bindgen does not invoke $CC directly. Instead it
+    # uses LLVM's libclang. To make sure all necessary flags are included we
+    # need to look in a few places.
+    export BINDGEN_EXTRA_CLANG_ARGS=" \
+      $(< ${stdenv.cc}/nix-support/libc-crt1-cflags) \
       $(< ${stdenv.cc}/nix-support/libc-cflags) \
       $(< ${stdenv.cc}/nix-support/cc-cflags) \
       $(< ${stdenv.cc}/nix-support/libcxx-cxxflags) \
@@ -59,24 +60,34 @@ mkShell (crateUtils.baseEnv // rec {
       ${lib.optionalString stdenv.cc.isGNU "-isystem ${stdenv.cc.cc}/lib/gcc/${stdenv.hostPlatform.config}/${lib.getVersion stdenv.cc.cc}/include"} \
     "
 
+    build_dir=build/${name}
+
     build() {
-      cargo test --no-run --target ${hostPlatform.config} --features icecap \
+      setup && \
+      (cd $build_dir && cargo test --no-run \
+        --manifest-path ${manifestPath} \
+        --target ${hostPlatform.config} --features icecap \
         ${lib.optionalString (!debug) "--release"} \
         -j $NIX_BUILD_CORES \
-        --target-dir build/${name}/target --manifest-path ../${name}/Cargo.toml \
-        $@ \
-      && install
+        $@
+      ) && \
+      distinguish
     }
 
-    install() {
-      d=build/${name}/target/aarch64-unknown-linux-gnu/${if debug then "debug" else "release"}/deps
+    setup() {
+      mkdir -p $build_dir/.cargo
+      ln -sf ${cargoConfig} $build_dir/.cargo/config
+    }
+
+    distinguish() {
+      d=$build_dir/target/aarch64-unknown-linux-gnu/${if debug then "debug" else "release"}/deps
       f="$(find $d -executable -type f -printf "%T@ %p\n" \
         | sort -n \
         | tail -n 1 \
         | cut -d ' ' -f 2 \
       )"
-      mkdir -p build/${name}/out
-      mv "$f" build/${name}/out/${name}
+      mkdir -p $build_dir/out
+      mv "$f" $build_dir/out/${name}
     }
   '';
 

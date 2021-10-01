@@ -8,8 +8,8 @@ nix_binary_cache_flags := \
 	--option extra-substituters $(nix_binary_cache_url) \
 	--option extra-trusted-public-keys $(nix_binary_cache_public_key)
 
-nix_build := nix-build $(nix_binary_cache_flags) -j $(shell nproc)
-nix_shell := nix-shell $(nix_binary_cache_flags) -j $(shell nproc) --pure
+nix_build := nix-build $(nix_binary_cache_flags) -j$(shell nproc)
+nix_shell := nix-shell $(nix_binary_cache_flags) -j$(shell nproc) --pure
 nix_expression := targets.nix
 
 export NIX_BUILD_SHELL := bash
