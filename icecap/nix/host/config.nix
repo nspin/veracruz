@@ -12,7 +12,7 @@ in {
   config = {
 
     net.interfaces = lib.optionalAttrs (icecapPlat == "virt") {
-      eth1 = {};
+      eth2 = {};
       lo = { static = "127.0.0.1"; };
     };
 

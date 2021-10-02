@@ -88,10 +88,10 @@ in lib.fix (self: with self; {
     runtime-manager = configured.callPackage ./binaries/runtime-manager.nix {
       inherit icecapCratesAttrs;
     };
-    veracruz-server-test = pkgs.musl.icecap.callPackage ./binaries/test.nix {} {
+    veracruz-server-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-server-test";
     };
-    veracruz-test = pkgs.musl.icecap.callPackage ./binaries/test.nix {} {
+    veracruz-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-test";
     };
   };
