@@ -85,8 +85,6 @@ impl RuntimeManager {
     }
 
     fn reset(&self) {
-        self.channel.enable_notify_read();
-        self.channel.enable_notify_write();
         for bit_lot_index in biterate::biterate(!0u64) {
             let bit_lot = unsafe {
                 &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
@@ -225,7 +223,6 @@ impl RuntimeManager {
             }
         }
         self.channel.notify_write();
-        self.channel.kick_write(); // HACK
         Ok(())
     }
 
@@ -235,7 +232,6 @@ impl RuntimeManager {
         loop {
             if let Some(msg) = self.channel.read() {
                 self.channel.notify_read();
-                self.channel.kick_read(); // HACK
                 let req = deserialize(&msg).unwrap();
                 log::trace!("read: {:x?}", req);
                 return Ok(req);
