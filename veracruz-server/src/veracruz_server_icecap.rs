@@ -74,9 +74,18 @@ impl Configuration {
         })
     }
 
+    fn hack_command() -> Command {
+        let mut command = Command::new("taskset");
+        command.arg("0x2");
+        command
+    }
+
+    fn hack_ensure_not_realm_running() {
+        Command::new("pkill").arg("icecap-host").status().unwrap();
+    }
+
     fn create_realm(&self) -> Result<()> {
-        let status = Command::new("taskset")
-            .arg("0x2")
+        let status = Self::hack_command()
             .arg(&self.icecap_host_command)
             .arg("create")
             .arg(format!("{}", self.realm_id))
@@ -88,8 +97,7 @@ impl Configuration {
 
     fn run_realm(&self) -> Result<Child> {
         let virtual_node_id: usize = 0;
-        let child = Command::new("taskset")
-            .arg("0x2")
+        let child = Self::hack_command()
             .arg(&self.icecap_host_command)
             .arg("run")
             .arg(format!("{}", self.realm_id))
@@ -100,10 +108,9 @@ impl Configuration {
 
     fn destroy_realm(&self) -> Result<()> {
         // HACK clean up in case of previous failure
-        Command::new("pkill").arg("icecap-host").status().unwrap();
+        Self::hack_ensure_not_realm_running();
 
-        let status = Command::new("taskset")
-            .arg("0x2")
+        let status = Self::hack_command()
             .arg(&self.icecap_host_command)
             .arg("destroy")
             .arg(format!("{}", self.realm_id))
@@ -239,7 +246,6 @@ impl VeracruzServer for VeracruzServerIceCap {
     }
 
     fn close(&mut self) -> Result<bool> {
-        log::debug!("close");
         self.realm_process.kill().unwrap();
         self.configuration.destroy_realm()?;
         Ok(true)
@@ -257,7 +263,6 @@ impl Drop for VeracruzServerIceCap {
 impl VeracruzServerIceCap {
 
     fn send(&self, request: &Request) -> Result<Response> {
-        log::debug!("send: {:x?}", request);
         let msg = serialize(request).unwrap();
         let header = (msg.len() as Header).to_le_bytes();
         let mut realm_channel = self.realm_channel.lock().unwrap();
@@ -269,7 +274,6 @@ impl VeracruzServerIceCap {
         let mut resp_bytes = vec![0; header as usize];
         realm_channel.read_exact(&mut resp_bytes).unwrap();
         let resp = deserialize(&resp_bytes).unwrap();
-        log::debug!("resp: {:x?}", resp);
         Ok(resp)
     }
 
