@@ -104,7 +104,7 @@ impl RuntimeManager {
             Request::GetEnclaveCert => {
                 match session_manager::get_enclave_cert_pem() {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(cert) => {
@@ -115,7 +115,7 @@ impl RuntimeManager {
             Request::GetEnclaveName => {
                 match session_manager::get_enclave_name() {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(name) => {
@@ -126,7 +126,7 @@ impl RuntimeManager {
             Request::NewTlsSession => {
                 match session_manager::new_session() {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(sess) => {
@@ -137,7 +137,7 @@ impl RuntimeManager {
             Request::CloseTlsSession(sess) => {
                 match session_manager::close_session(*sess) {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(()) => {
@@ -148,7 +148,7 @@ impl RuntimeManager {
             Request::SendTlsData(sess, data) => {
                 match session_manager::send_data(*sess, data) {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(()) => {
@@ -159,7 +159,7 @@ impl RuntimeManager {
             Request::GetTlsDataNeeded(sess) => {
                 match session_manager::get_data_needed(*sess) {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(needed) => {
@@ -170,7 +170,7 @@ impl RuntimeManager {
             Request::GetTlsData(sess) => {
                 match session_manager::get_data(*sess) {
                     Err(s) => {
-                        log::debug!("{}", s);
+                        log::warn!("{}", s);
                         Response::Error(Error::Unspecified)
                     }
                     Ok((active, data)) => {
@@ -184,9 +184,9 @@ impl RuntimeManager {
 
     fn wait(&self) -> Fallible<()> {
         return Ok(());
-        log::trace!("blocking");
+        log::trace!("waiting");
         let bit_lots = self.event.wait();
-        log::trace!("unblocked");
+        log::trace!("done waiting");
         for bit_lot_index in biterate::biterate(bit_lots) {
             let bit_lot = unsafe {
                 &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
@@ -194,7 +194,7 @@ impl RuntimeManager {
             let bits = bit_lot.swap(0, core::sync::atomic::Ordering::SeqCst);
             for bit in biterate::biterate(bits) {
                 let in_index = (bit_lot_index * 64 + bit) as usize;
-                debug_println!("in_index = {}", in_index);
+                log::trace!("in_index = {}", in_index);
             }
         }
         Ok(())
@@ -205,7 +205,7 @@ impl RuntimeManager {
         let mut block = false;
         let resp_bytes = serialize(resp).unwrap();
         while !self.channel.write(&resp_bytes) {
-            log::debug!("host ring buffer full, waiting on notification");
+            log::warn!("host ring buffer full, waiting on notification");
             if block {
                 self.wait()?;
             } else {
@@ -244,7 +244,8 @@ fn icecap_runtime_init() {
     std::icecap_impl::set_now(std::time::Duration::from_secs(NOW)); // HACK
     let mut logger = Logger::default();
     // logger.level = Level::Trace;
-    logger.level = Level::Debug;
+    // logger.level = Level::Debug;
+    logger.level = Level::Info;
     logger.display_mode = DisplayMode::Line;
     logger.write = |s| debug_println!("{}", s);
     logger.init().unwrap();
