@@ -75,7 +75,9 @@ impl Configuration {
     }
 
     fn create_realm(&self) -> Result<()> {
-        let status = Command::new(&self.icecap_host_command)
+        let status = Command::new("taskset")
+            .arg("0x2")
+            .arg(&self.icecap_host_command)
             .arg("create")
             .arg(format!("{}", self.realm_id))
             .arg(&self.realm_spec)
@@ -86,7 +88,9 @@ impl Configuration {
 
     fn run_realm(&self) -> Result<Child> {
         let virtual_node_id: usize = 0;
-        let child = Command::new(&self.icecap_host_command)
+        let child = Command::new("taskset")
+            .arg("0x2")
+            .arg(&self.icecap_host_command)
             .arg("run")
             .arg(format!("{}", self.realm_id))
             .arg(format!("{}", virtual_node_id))
@@ -98,7 +102,9 @@ impl Configuration {
         // HACK clean up in case of previous failure
         Command::new("pkill").arg("icecap-host").status().unwrap();
 
-        let status = Command::new(&self.icecap_host_command)
+        let status = Command::new("taskset")
+            .arg("0x2")
+            .arg(&self.icecap_host_command)
             .arg("destroy")
             .arg(format!("{}", self.realm_id))
             .status().unwrap();

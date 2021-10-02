@@ -40,7 +40,6 @@ struct Config {
 }
 
 fn main(config: Config) -> Fallible<()> {
-    debug_println!("runtime manager enter");
     icecap_runtime_init();
     log::debug!("runtime manager enter");
 
@@ -244,8 +243,8 @@ fn icecap_runtime_init() {
     icecap_std_external::set_panic();
     std::icecap_impl::set_now(std::time::Duration::from_secs(NOW)); // HACK
     let mut logger = Logger::default();
-    logger.level = Level::Trace;
-    // logger.level = Level::Debug;
+    // logger.level = Level::Trace;
+    logger.level = Level::Debug;
     logger.display_mode = DisplayMode::Line;
     logger.write = |s| debug_println!("{}", s);
     logger.init().unwrap();
