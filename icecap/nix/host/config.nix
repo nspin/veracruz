@@ -75,10 +75,9 @@ in {
 
         RUST_LOG=debug \
         DATABASE_URL=proxy-attestation-server.db \
-        VERACRUZ_RESOURCE_SERVER_ENDPOINT=file:/dev/rb_resource_server \
         VERACRUZ_REALM_ID=0 \
         VERACRUZ_REALM_SPEC=/spec.bin \
-        VERACRUZ_REALM_ENDPOINT=/dev/rb_realm \
+        VERACRUZ_REALM_ENDPOINT=/dev/icecap_channel_realm_$VERACRUZ_REALM_ID \
           $test_cmd --test-threads=1 "$@"
       }
 

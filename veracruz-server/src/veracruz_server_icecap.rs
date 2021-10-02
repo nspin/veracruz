@@ -30,7 +30,6 @@ use veracruz_utils::{
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
 const ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
-const RESOURCE_SERVER_ENDPOINT_ENV: &str = "VERACRUZ_RESOURCE_SERVER_ENDPOINT";
 const REALM_ID_ENV: &str = "VERACRUZ_REALM_ID";
 const REALM_SPEC_ENV: &str = "VERACRUZ_REALM_SPEC";
 const REALM_ENDPOINT_ENV: &str = "VERACRUZ_REALM_ENDPOINT";
@@ -53,7 +52,6 @@ pub enum IceCapError {
 
 struct Configuration {
     icecap_host_command: PathBuf,
-    resource_server_endpoint: PathBuf,
     realm_id: usize,
     realm_spec: PathBuf,
     realm_endpoint: PathBuf,
@@ -68,7 +66,6 @@ impl Configuration {
     fn from_env() -> Result<Self> {
         Ok(Self {
             icecap_host_command: Self::env_var(ICECAP_HOST_COMMAND_ENV).map(PathBuf::from).unwrap_or(DEFAULT_ICECAP_HOST_COMMAND.into()),
-            resource_server_endpoint: Self::env_var(RESOURCE_SERVER_ENDPOINT_ENV)?.into(),
             realm_id: Self::env_var(REALM_ID_ENV)?.parse::<usize>().map_err(|_|
                 VeracruzServerError::IceCapError(IceCapError::InvalidEnvironemntVariableValue { variable: REALM_ID_ENV.to_string() })
             )?,
@@ -82,16 +79,17 @@ impl Configuration {
             .arg("create")
             .arg(format!("{}", self.realm_id))
             .arg(&self.realm_spec)
-            .arg(&self.resource_server_endpoint)
             .status().unwrap();
         assert!(status.success());
         Ok(())
     }
     
     fn run_realm(&self) -> Result<()> {
+        let virtual_node_id: usize = 0;
         let status = Command::new(&self.icecap_host_command)
-            .arg("hack-run")
+            .arg("run")
             .arg(format!("{}", self.realm_id))
+            .arg(format!("{}", virtual_node_id))
             .status().unwrap();
         assert!(status.success());
         Ok(())
