@@ -50,7 +50,6 @@ fn main(config: Config) -> Fallible<()> {
                 index,
             }))
         };
-        
         RingBuffer::realize_resume(
             &config.host_ring_buffer,
             RingBufferKicksConfig {
