@@ -47,7 +47,7 @@ in {
       net.interfaces.eth2 = {};
 
       initramfs.extraInitCommands = ''
-        mkdir /mnt/nix/store/
+        mkdir -p /mnt/nix/store/
         mount -t 9p -o trans=virtio,version=9p2000.L,ro store /mnt/nix/store/
         spec=/mnt/$spec
       '';
