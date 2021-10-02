@@ -37,7 +37,7 @@ in lib.fix (self: with self; {
         "earlycon=icecap_vmm"
         "console=hvc0"
         "loglevel=7"
-      ] + lib.optionals (icecapPlat == "virt") [
+      ] ++ lib.optionals (icecapPlat == "virt") [
         "spec=${spec}"
         "test_collateral=${testCollateral}"
       ];
