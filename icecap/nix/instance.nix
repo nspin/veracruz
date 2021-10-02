@@ -2,8 +2,9 @@
 
 let
 
-  inherit (pkgs.none) runCommand nukeReferences;
-  inherit (pkgs.none.icecap) crateUtils stripElfSplit platUtils;
+  inherit (pkgs.none) runCommand;
+  inherit (pkgs.dev) nukeReferences;
+  inherit (pkgs.none.icecap) crateUtils elfUtils platUtils;
   inherit (pkgs.linux.icecap) linuxKernel nixosLite;
 
   inherit (configured)
@@ -69,7 +70,7 @@ in lib.fix (self: with self; {
     src = ./realm/ddl;
     config = {
       components = {
-        runtime_manager.image = stripElfSplit runtimeManagerElf;
+        runtime_manager.image = elfUtils.split runtimeManagerElf;
       };
     };
   };
@@ -79,7 +80,6 @@ in lib.fix (self: with self; {
     icecap-start-generic
     icecap-std-external
     icecap-event-server-types
-    generated-module-hack
   ]);
 
   icecapCrates = crateUtils.collectEnv (lib.attrValues icecapCratesAttrs);

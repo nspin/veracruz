@@ -55,7 +55,7 @@ in {
 
       cp -pdv ${pkgs.sqlite.out}/lib/libsqlite3.so* $out/lib # HACK
 
-      copy_bin_and_libs ${pkgs.icecap.icecap-host}/bin/icecap-host
+      copy_bin_and_libs ${pkgs.muslPkgs.icecap.icecap-host}/bin/icecap-host
 
       # debugging tools
       copy_bin_and_libs ${pkgs.strace}/bin/strace

@@ -7,10 +7,10 @@ class RuntimeManager(GenericElfComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        channel = self.composition.extern_ring_buffer('realm_{}_channel_ring_buffer'.format(self.realm_id()), size=1<<21)
+        channel = self.composition.extern_ring_buffer('realm_{}_channel_ring_buffer'.format(self.composition.realm_id()), size=1<<21)
 
         self._arg = {
-            'host_ring_buffer': self.map_ring_buffer_with(channel),
+            'host_ring_buffer': self.map_ring_buffer(channel),
             }
 
     def arg_json(self):
