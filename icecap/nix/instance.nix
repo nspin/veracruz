@@ -78,6 +78,7 @@ in lib.fix (self: with self; {
     icecap-core
     icecap-start-generic
     icecap-std-external
+    icecap-event-server-types
     generated-module-hack
   ]);
 

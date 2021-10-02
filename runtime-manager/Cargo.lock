@@ -1136,6 +1136,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "icecap-event-server-types"
+version = "0.1.0"
+dependencies = [
+ "finite-set",
+ "icecap-rpc",
+ "serde 1.0.130",
+]
+
+[[package]]
 name = "icecap-failure"
 version = "0.1.0"
 dependencies = [
@@ -2338,6 +2347,7 @@ dependencies = [
  "execution-engine",
  "hex",
  "icecap-core",
+ "icecap-event-server-types",
  "icecap-start-generic",
  "icecap-std-external",
  "lazy_static",

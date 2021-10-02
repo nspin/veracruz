@@ -18,7 +18,12 @@ use bincode::{serialize, deserialize};
 use icecap_core::prelude::*;
 use icecap_core::config::RingBufferConfig;
 use icecap_core::logger::{Logger, Level, DisplayMode};
+use icecap_core::finite_set::Finite;
+use icecap_core::rpc_sel4::RPCClient;
+use icecap_core::config::RingBufferKicksConfig;
 use icecap_start_generic::declare_generic_main;
+use icecap_event_server_types::calls::Client as EventServerRequest;
+use icecap_event_server_types::events;
 
 use veracruz_utils::platform::icecap::message::{Request, Response, Error};
 
@@ -29,29 +34,31 @@ declare_generic_main!(main);
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
     event: Notification,
-    event_server_endpoint: Endpoint,
+    event_server: Endpoint,
     host_ring_buffer: RingBufferConfig,
 }
 
 fn main(config: Config) -> Fallible<()> {
     icecap_runtime_init();
 
-    let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
-    let mk_signal = move |index: events::RealmOut| -> icecap_std::ring_buffer::Kick {
-        let event_server = event_server.clone();
-        let index = index.to_nat();
-        Box::new(move || event_server.call::<()>(&EventServerRequest::Signal {
-            index,
-        }))
+    let host_ring_buffer = {
+        let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
+        let mk_signal = move |index: events::RealmOut| -> icecap_core::ring_buffer::Kick {
+            let event_server = event_server.clone();
+            let index = index.to_nat();
+            Box::new(move || event_server.call::<()>(&EventServerRequest::Signal {
+                index,
+            }))
+        };
+        
+        RingBuffer::realize_resume(
+            &config.host_ring_buffer,
+            RingBufferKicksConfig {
+                read: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
+                write: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
+            },
+        )
     };
-
-    let host_ring_buffer = RingBuffer::realize_resume(
-        &config.host_ring_buffer,
-        RingBufferKicksConfig {
-            read: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
-            write: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
-        },
-    );
 
     RuntimeManager::new(host_ring_buffer, config.event).run()
 }
