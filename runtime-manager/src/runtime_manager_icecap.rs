@@ -230,6 +230,7 @@ fn icecap_runtime_init() {
     let mut logger = Logger::default();
     logger.level = Level::Trace;
     logger.display_mode = DisplayMode::Line;
+    logger.write = |s| debug_println!("{}", s);
     logger.init().unwrap();
 }
 

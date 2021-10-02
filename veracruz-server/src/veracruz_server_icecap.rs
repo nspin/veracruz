@@ -19,7 +19,7 @@ use std::{
     result,
     sync::Mutex,
     string::ToString,
-    process::Command,
+    process::{Command, Child},
 };
 use err_derive::Error;
 use bincode::{serialize, deserialize};
@@ -84,18 +84,19 @@ impl Configuration {
         Ok(())
     }
 
-    fn run_realm(&self) -> Result<()> {
+    fn run_realm(&self) -> Result<Child> {
         let virtual_node_id: usize = 0;
         let child = Command::new(&self.icecap_host_command)
             .arg("run")
             .arg(format!("{}", self.realm_id))
             .arg(format!("{}", virtual_node_id))
             .spawn().unwrap();
-        // TODO save child for clean-up
-        Ok(())
+        Ok(child)
     }
 
     fn destroy_realm(&self) -> Result<()> {
+        // HACK HACK HACK
+        Command::new("pkill").arg("icecap-host").status().unwrap();
         let status = Command::new(&self.icecap_host_command)
             .arg("destroy")
             .arg(format!("{}", self.realm_id))
@@ -108,7 +109,8 @@ impl Configuration {
 
 pub struct VeracruzServerIceCap {
     configuration: Configuration,
-    realm_handle: Mutex<File>,
+    realm_channel: Mutex<File>,
+    realm_process: Child,
 
     // HACK
     device_id: i32,
@@ -125,14 +127,15 @@ impl VeracruzServer for VeracruzServerIceCap {
         let configuration = Configuration::from_env()?;
         configuration.destroy_realm()?; // HACK
         configuration.create_realm()?;
-        configuration.run_realm()?;
-        let realm_handle = Mutex::new(
+        let realm_process = configuration.run_realm()?;
+        let realm_channel = Mutex::new(
             OpenOptions::new().read(true).write(true).open(&configuration.realm_endpoint)
                 .map_err(|_| VeracruzServerError::IceCapError(IceCapError::RealmChannelError))?
         );
         let server = Self {
             configuration,
-            realm_handle,
+            realm_channel,
+            realm_process,
             device_id,
         };
         match server.send(&Request::New { policy_json: policy_json.to_string() })? {
@@ -229,6 +232,8 @@ impl VeracruzServer for VeracruzServerIceCap {
     }
 
     fn close(&mut self) -> Result<bool> {
+        log::debug!("close");
+        self.realm_process.kill().unwrap();
         self.configuration.destroy_realm()?;
         Ok(true)
     }
@@ -247,14 +252,14 @@ impl VeracruzServerIceCap {
     fn send(&self, request: &Request) -> Result<Response> {
         let msg = serialize(request).unwrap();
         let header = (msg.len() as Header).to_le_bytes();
-        let mut realm_handle = self.realm_handle.lock().unwrap();
-        realm_handle.write(&header).unwrap();
-        realm_handle.write(&msg).unwrap();
+        let mut realm_channel = self.realm_channel.lock().unwrap();
+        realm_channel.write(&header).unwrap();
+        realm_channel.write(&msg).unwrap();
         let mut header_bytes = [0; size_of::<Header>()];
-        realm_handle.read_exact(&mut header_bytes).unwrap();
+        realm_channel.read_exact(&mut header_bytes).unwrap();
         let header = u32::from_le_bytes(header_bytes);
         let mut resp_bytes = vec![0; header as usize];
-        realm_handle.read_exact(&mut resp_bytes).unwrap();
+        realm_channel.read_exact(&mut resp_bytes).unwrap();
         let resp = deserialize(&resp_bytes).unwrap();
         Ok(resp)
     }
