@@ -221,7 +221,6 @@ impl RuntimeManager {
                 block = false;
             } else {
                 block = true;
-                self.channel.enable_notify_read();
                 self.channel.enable_notify_write();
             }
         }
@@ -246,7 +245,6 @@ impl RuntimeManager {
             } else {
                 block = true;
                 self.channel.enable_notify_read();
-                self.channel.enable_notify_write();
             }
         }
     }
