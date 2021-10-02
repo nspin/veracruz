@@ -194,13 +194,8 @@ impl RuntimeManager {
     }
 
     fn wait(&self) -> Fallible<()> {
-        // return Ok(());
         log::trace!("waiting");
-        self.channel.enable_notify_read();
-        self.channel.enable_notify_write();
         let bit_lots = self.event.wait();
-        self.channel.enable_notify_read();
-        self.channel.enable_notify_write();
         log::trace!("done waiting");
         for bit_lot_index in biterate::biterate(bit_lots) {
             let bit_lot = unsafe {
@@ -223,8 +218,10 @@ impl RuntimeManager {
             log::warn!("host ring buffer full, waiting on notification");
             if block {
                 self.wait()?;
+                block = false;
             } else {
                 block = true;
+                self.channel.enable_notify_read();
                 self.channel.enable_notify_write();
             }
         }
@@ -245,9 +242,11 @@ impl RuntimeManager {
                 return Ok(req);
             } else if block {
                 self.wait()?;
+                block = false;
             } else {
                 block = true;
                 self.channel.enable_notify_read();
+                self.channel.enable_notify_write();
             }
         }
     }
