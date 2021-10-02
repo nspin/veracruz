@@ -194,8 +194,13 @@ impl RuntimeManager {
     }
 
     fn wait(&self) -> Fallible<()> {
+        // return Ok(());
         log::trace!("waiting");
+        self.channel.enable_notify_read();
+        self.channel.enable_notify_write();
         let bit_lots = self.event.wait();
+        self.channel.enable_notify_read();
+        self.channel.enable_notify_write();
         log::trace!("done waiting");
         for bit_lot_index in biterate::biterate(bit_lots) {
             let bit_lot = unsafe {
@@ -224,6 +229,7 @@ impl RuntimeManager {
             }
         }
         self.channel.notify_write();
+        self.channel.kick_write(); // HACK
         Ok(())
     }
 
@@ -233,6 +239,7 @@ impl RuntimeManager {
         loop {
             if let Some(msg) = self.channel.read() {
                 self.channel.notify_read();
+                self.channel.kick_read(); // HACK
                 let req = deserialize(&msg).unwrap();
                 log::trace!("read: {:x?}", req);
                 return Ok(req);
