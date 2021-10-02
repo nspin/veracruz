@@ -9,88 +9,100 @@ let
   '';
 
 in {
-  config = {
+  config = lib.mkMerge [
 
-    net.interfaces = lib.optionalAttrs (icecapPlat == "virt") {
-      eth2 = {};
-      lo = { static = "127.0.0.1"; };
-    };
+    {
+      initramfs.extraUtilsCommands = ''
+        ${lib.concatStrings (lib.mapAttrsToList (k: v: ''
+          copy_bin_and_libs ${executableInContext k v}/bin/${k}
+        '') instance.testElf)}
 
-    initramfs.extraInitCommands = ''
-      mkdir -p /etc /bin /mnt/nix/store
-      ln -s $(which sh) /bin/sh
-      mount -t debugfs none /sys/kernel/debug/
+        cp -pdv ${pkgs.sqlite.out}/lib/libsqlite3.so* $out/lib # HACK
 
-    '' + lib.optionalString (icecapPlat == "virt") ''
-      mount -t 9p -o trans=virtio,version=9p2000.L,ro store /mnt/nix/store/
-      spec="$(sed -rn 's,.*spec=([^ ]*).*,\1,p' /proc/cmdline)"
-      echo "cp -L /mnt/$spec /spec.bin..."
-      cp -L "/mnt/$spec" /spec.bin
-      echo "...done"
+        copy_bin_and_libs ${pkgs.muslPkgs.icecap.icecap-host}/bin/icecap-host
 
-    '' + lib.optionalString (icecapPlat == "rpi4") ''
-      (
-        cd /sys/devices/system/cpu/cpu0/cpufreq/
-        echo userspace > scaling_governor
-        echo 1500000 > scaling_setspeed
-      )
+        # debugging tools
+        copy_bin_and_libs ${pkgs.strace}/bin/strace
+        copy_bin_and_libs ${pkgs.iproute}/bin/ip
+        copy_bin_and_libs ${pkgs.curl.bin}/bin/curl
+        cp -pdv ${pkgs.libunwind}/lib/libunwind-aarch64*.so* $out/lib
+        cp -pdv ${pkgs.glibc}/lib/libnss_dns*.so* $out/lib
+      '';
 
-      mount -o ro /dev/mmcblk0p1 mnt/
-      cp /mnt/spec.bin /spec.bin
-    '' + ''
+      net.interfaces = {
+        lo = { static = "127.0.0.1"; };
+      };
 
-      mkdir /x
-      cp ${instance.proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
+      initramfs.extraInitCommands = ''
+        mkdir -p /etc /bin /mnt/nix/store
+        ln -s $(which sh) /bin/sh
+        mount -t debugfs none /sys/kernel/debug/
 
-      test_collateral="$(sed -rn 's,.*test_collateral=([^ ]*).*,\1,p' /proc/cmdline)"
-      ln -s "/mnt/$test_collateral" /test-collateral
+        date -s '@${now}' # HACK
 
-      date -s '@${now}' # HACK
-    '';
+        mkdir /x
+        cp ${instance.proxyAttestationServerTestDatabase} /x/proxy-attestation-server.db
+      '';
+    }
 
-    initramfs.extraUtilsCommands = ''
-      ${lib.concatStrings (lib.mapAttrsToList (k: v: ''
-        copy_bin_and_libs ${executableInContext k v}/bin/${k}
-      '') instance.testElf)}
+    (lib.mkIf (icecapPlat == "virt") {
+      net.interfaces.eth2 = {};
 
-      cp -pdv ${pkgs.sqlite.out}/lib/libsqlite3.so* $out/lib # HACK
+      initramfs.extraInitCommands = ''
+        mount -t 9p -o trans=virtio,version=9p2000.L,ro store /mnt/nix/store/
+        spec=/mnt/$spec
+      '';
+    })
 
-      copy_bin_and_libs ${pkgs.muslPkgs.icecap.icecap-host}/bin/icecap-host
+    (lib.mkIf (icecapPlat == "rpi4") {
+      initramfs.extraInitCommands = ''
+        (
+          cd /sys/devices/system/cpu/cpu0/cpufreq/
+          echo userspace > scaling_governor
+          echo 1500000 > scaling_setspeed
+        )
 
-      # debugging tools
-      copy_bin_and_libs ${pkgs.strace}/bin/strace
-      copy_bin_and_libs ${pkgs.iproute}/bin/ip
-      copy_bin_and_libs ${pkgs.curl.bin}/bin/curl
-      cp -pdv ${pkgs.libunwind}/lib/libunwind-aarch64*.so* $out/lib
-      cp -pdv ${pkgs.glibc}/lib/libnss_dns*.so* $out/lib
-    '';
+        mount -o ro /dev/mmcblk0p1 mnt/
+        spec=/mnt/spec.bin
+      '';
+    })
 
-    initramfs.profile = ''
-      run_test() {
+    {
+      initramfs.extraInitCommands = ''
+        set -x
+        cp -L $spec /spec.bin
+        ln -s /mnt/$test_collateral /test-collateral
+        set +x
+      '';
 
-        test_cmd=$1
-        shift
+      initramfs.profile = ''
+        run_test() {
 
-        cd /x
+          test_cmd=$1
+          shift
 
-        RUST_LOG=debug \
-        DATABASE_URL=proxy-attestation-server.db \
-        VERACRUZ_REALM_ID=0 \
-        VERACRUZ_REALM_SPEC=/spec.bin \
-        VERACRUZ_REALM_ENDPOINT=/dev/icecap_channel_realm_$VERACRUZ_REALM_ID \
-          $test_cmd --test-threads=1 --nocapture --show-output "$@"
-      }
+          cd /x
 
-      # convenience
+          RUST_LOG=info \
+          DATABASE_URL=proxy-attestation-server.db \
+          VERACRUZ_REALM_ID=0 \
+          VERACRUZ_REALM_SPEC=/spec.bin \
+          VERACRUZ_REALM_ENDPOINT=/dev/icecap_channel_realm_$VERACRUZ_REALM_ID \
+            $test_cmd --test-threads=1 --nocapture --show-output "$@"
+        }
 
-      vst() {
-        run_test veracruz-server-test
-      }
+        # convenience
 
-      vt() {
-        run_test veracruz-test
-      }
-    '';
+        vst() {
+          run_test veracruz-server-test
+        }
 
-  };
+        vt() {
+          run_test veracruz-test
+        }
+      '';
+    }
+
+  ];
+
 }
