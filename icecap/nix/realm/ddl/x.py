@@ -2,7 +2,7 @@ from icedl.common import GenericElfComponent
 from icedl.realm import BaseRealmComposition
 
 
-class VeracruzComposition(GenericElfComponent):
+class RuntimeManager(GenericElfComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,7 +20,7 @@ class VeracruzComposition(GenericElfComponent):
 class Composition(BaseRealmComposition):
 
     def compose(self):
-        self.component(Veracruz, 'veracruz')
+        self.component(RuntimeManager, 'runtime_manager')
 
 
 Composition.run()

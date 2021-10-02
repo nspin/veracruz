@@ -13,7 +13,7 @@ let
 
   now = builtins.readFile ../build/NOW;
 
-  runtimeManagerEnclaveElf = ../build/runtime-manager/out/runtime_manager_enclave.elf;
+  runtimeManagerElf = ../build/runtime-manager/out/runtime_manager_enclave.elf;
 
   testElf = {
     veracruz-server-test = ../build/veracruz-server-test/out/veracruz-server-test;
@@ -69,7 +69,7 @@ in lib.fix (self: with self; {
     src = ./realm/ddl;
     config = {
       components = {
-        runtime_manager.image = stripElfSplit runtimeManagerEnclaveElf;
+        runtime_manager.image = stripElfSplit runtimeManagerElf;
       };
     };
   };
