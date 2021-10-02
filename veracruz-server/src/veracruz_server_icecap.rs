@@ -83,18 +83,18 @@ impl Configuration {
         assert!(status.success());
         Ok(())
     }
-    
+
     fn run_realm(&self) -> Result<()> {
         let virtual_node_id: usize = 0;
-        let status = Command::new(&self.icecap_host_command)
+        let child = Command::new(&self.icecap_host_command)
             .arg("run")
             .arg(format!("{}", self.realm_id))
             .arg(format!("{}", virtual_node_id))
-            .status().unwrap();
-        assert!(status.success());
+            .spawn().unwrap();
+        // TODO save child for clean-up
         Ok(())
     }
-    
+
     fn destroy_realm(&self) -> Result<()> {
         let status = Command::new(&self.icecap_host_command)
             .arg("destroy")

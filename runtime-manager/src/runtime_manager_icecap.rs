@@ -39,7 +39,10 @@ struct Config {
 }
 
 fn main(config: Config) -> Fallible<()> {
+    debug_println!("runtime manager enter");
     icecap_runtime_init();
+    debug_println!("log test +a");
+    log::debug!("log test +b");
 
     let channel = {
         let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
@@ -179,23 +182,41 @@ impl RuntimeManager {
     }
 
     fn send(&mut self, resp: &Response) -> Fallible<()> {
+        log::trace!("write: {:x?}", resp);
+        let mut block = false;
         let resp_bytes = serialize(resp).unwrap();
         while !self.channel.write(&resp_bytes) {
             log::debug!("host ring buffer full, waiting on notification");
-            self.event.wait();
+            if block {
+                log::trace!("write: blocking");
+                self.event.wait();
+                log::trace!("write: unblocked");
+            } else {
+                block = true;
+                self.channel.enable_notify_write();
+            }
         }
         self.channel.notify_write();
         Ok(())
     }
 
     fn recv(&mut self) -> Fallible<Request> {
+        let mut block = false;
         loop {
             if let Some(msg) = self.channel.read() {
                 self.channel.notify_read();
                 let req = deserialize(&msg).unwrap();
+                log::trace!("read: {:x?}", req);
                 return Ok(req);
             }
-            self.event.wait();
+            if block {
+                log::trace!("read: blocking");
+                self.event.wait();
+                log::trace!("read: unblocked");
+            } else {
+                block = true;
+                self.channel.enable_notify_read();
+            }
         }
     }
 
