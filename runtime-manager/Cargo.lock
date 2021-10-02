@@ -1139,6 +1139,7 @@ dependencies = [
 name = "icecap-event-server-types"
 version = "0.1.0"
 dependencies = [
+ "biterate",
  "finite-set",
  "icecap-rpc",
  "serde 1.0.130",

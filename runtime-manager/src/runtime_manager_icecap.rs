@@ -11,19 +11,23 @@
 
 extern crate alloc;
 
-use std::string::ToString;
 use serde::{Serialize, Deserialize};
 use bincode::{serialize, deserialize};
 
-use icecap_core::prelude::*;
-use icecap_core::config::RingBufferConfig;
-use icecap_core::logger::{Logger, Level, DisplayMode};
-use icecap_core::finite_set::Finite;
-use icecap_core::rpc_sel4::RPCClient;
-use icecap_core::config::RingBufferKicksConfig;
+use icecap_core::{
+    prelude::*,
+    config::RingBufferConfig,
+    logger::{Logger, Level, DisplayMode},
+    finite_set::Finite,
+    rpc_sel4::RPCClient,
+    config::RingBufferKicksConfig,
+};
 use icecap_start_generic::declare_generic_main;
-use icecap_event_server_types::calls::Client as EventServerRequest;
-use icecap_event_server_types::events;
+use icecap_event_server_types::{
+    events,
+    calls::Client as EventServerRequest,
+    Bitfield as EventServerBitfield,
+};
 
 use veracruz_utils::platform::icecap::message::{Request, Response, Error};
 
@@ -61,35 +65,30 @@ fn main(config: Config) -> Fallible<()> {
         )
     };
 
-    RuntimeManager::new(channel, config.event, config.event_server_bitfield).run()
+    let event_server_bitfield = unsafe {
+        EventServerBitfield::new(config.event_server_bitfield)
+    };
+
+    event_server_bitfield.clear_ignore_all();
+
+    RuntimeManager::new(channel, config.event, event_server_bitfield).run()
 }
 
 struct RuntimeManager {
     channel: PacketRingBuffer,
     event: Notification,
-    event_server_bitfield: usize,
+    event_server_bitfield: EventServerBitfield,
     active: bool,
 }
 
 impl RuntimeManager {
 
-    fn new(channel: RingBuffer, event: Notification, event_server_bitfield: usize) -> Self {
-        let this = Self {
+    fn new(channel: RingBuffer, event: Notification, event_server_bitfield: EventServerBitfield) -> Self {
+        Self {
             channel: PacketRingBuffer::new(channel),
             event,
             event_server_bitfield,
             active: true,
-        };
-        this.reset();
-        this
-    }
-
-    fn reset(&self) {
-        for bit_lot_index in biterate::biterate(!0u64) {
-            let bit_lot = unsafe {
-                &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
-            };
-            bit_lot.store(0, core::sync::atomic::Ordering::SeqCst);
         }
     }
 
@@ -193,18 +192,9 @@ impl RuntimeManager {
 
     fn wait(&self) -> Fallible<()> {
         log::trace!("waiting");
-        let bit_lots = self.event.wait();
+        let badge = self.event.wait();
         log::trace!("done waiting");
-        for bit_lot_index in biterate::biterate(bit_lots) {
-            let bit_lot = unsafe {
-                &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
-            };
-            let bits = bit_lot.swap(0, core::sync::atomic::Ordering::SeqCst);
-            for bit in biterate::biterate(bits) {
-                let in_index = (bit_lot_index * 64 + bit) as usize;
-                log::trace!("in_index = {}", in_index);
-            }
-        }
+        self.event_server_bitfield.clear_ignore(badge);
         Ok(())
     }
 
