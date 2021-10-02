@@ -3,7 +3,7 @@
 , crateUtils, nixToToml
 , protobuf, perl
 , liboutline, sysroot-rs
-, icecapCratesAttrs
+, icecapCrates
 }:
 
 let
@@ -16,12 +16,12 @@ let
 
   cargoConfig = nixToToml (crateUtils.clobber [
     crateUtils.baseCargoConfig
-    { profile.release.panic = "abort"; }
     {
-      target.${hostPlatform.config} = crateUtils.clobber (map (crate:
-      if crate.buildScript == null then {} else {
-        ${"dummy-link-${crate.name}"} = crate.buildScript;
-      }) (lib.attrValues icecapCratesAttrs));
+      target.${hostPlatform.config} = crateUtils.clobber (lib.forEach icecapCrates (crate:
+        lib.optionalAttrs (crate.buildScript != null) {
+          ${"dummy-link-${crate.name}"} = crate.buildScript;
+        }
+      ));
     }
     {
       target.${hostPlatform.config}.rustflags = [ "--sysroot=${sysroot-rs}" ];

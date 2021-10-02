@@ -2,8 +2,7 @@
 
 let
 
-  inherit (pkgs.none) runCommand;
-  inherit (pkgs.dev) nukeReferences;
+  inherit (pkgs.dev) runCommand nukeReferences;
   inherit (pkgs.none.icecap) crateUtils elfUtils platUtils;
   inherit (pkgs.linux.icecap) linuxKernel nixosLite;
 
@@ -38,6 +37,7 @@ in lib.fix (self: with self; {
         "earlycon=icecap_vmm"
         "console=hvc0"
         "loglevel=7"
+      ] + lib.optionals (icecapPlat == "virt") [
         "spec=${spec}"
         "test_collateral=${testCollateral}"
       ];
@@ -75,19 +75,19 @@ in lib.fix (self: with self; {
     };
   };
 
-  icecapCratesAttrs = crateUtils.closure' (with globalCrates; [
+  icecapCrates = lib.attrValues (crateUtils.closure' (with globalCrates; [
     icecap-core
     icecap-start-generic
     icecap-std-external
     icecap-event-server-types
     biterate
-  ]);
+  ]));
 
-  icecapCrates = crateUtils.collectEnv (lib.attrValues icecapCratesAttrs);
+  icecapCratesEnv = crateUtils.collectEnv icecapCrates;
 
   env = {
     runtime-manager = configured.callPackage ./binaries/runtime-manager.nix {
-      inherit icecapCratesAttrs;
+      inherit icecapCrates;
     };
     veracruz-server-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-server-test";

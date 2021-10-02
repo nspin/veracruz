@@ -55,11 +55,9 @@ in {
 
     (lib.mkIf (icecapPlat == "rpi4") {
       initramfs.extraInitCommands = ''
-        (
-          cd /sys/devices/system/cpu/cpu0/cpufreq/
-          echo userspace > scaling_governor
-          echo 1500000 > scaling_setspeed
-        )
+        for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+          echo performance > $f
+        done
 
         mkdir /mnt/
         mount -o ro /dev/mmcblk0p1 /mnt/
