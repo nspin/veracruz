@@ -58,7 +58,7 @@ mkShell (crateUtils.baseEnv // {
         --target-dir ./target \
         --out-dir ./out \
         -j $NIX_BUILD_CORES \
-        $@
+        "$@"
       )
     }
 

@@ -70,7 +70,7 @@ mkShell (crateUtils.baseEnv // rec {
         ${lib.optionalString (!debug) "--release"} \
         -j $NIX_BUILD_CORES \
         --target-dir ./target \
-        $@
+        "$@"
       ) && \
       distinguish
     }
