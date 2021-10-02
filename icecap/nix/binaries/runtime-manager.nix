@@ -17,14 +17,14 @@ let
   cargoConfig = nixToToml (crateUtils.clobber [
     crateUtils.baseCargoConfig
     {
+      target.${hostPlatform.config}.rustflags = [ "--sysroot=${sysroot-rs}" ];
+    }
+    {
       target.${hostPlatform.config} = crateUtils.clobber (lib.forEach icecapCrates (crate:
         lib.optionalAttrs (crate.buildScript != null) {
           ${"dummy-link-${crate.name}"} = crate.buildScript;
         }
       ));
-    }
-    {
-      target.${hostPlatform.config}.rustflags = [ "--sysroot=${sysroot-rs}" ];
     }
   ]);
 
