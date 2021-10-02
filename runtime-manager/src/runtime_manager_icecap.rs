@@ -34,7 +34,8 @@ declare_generic_main!(main);
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
     event: Notification,
-    event_server: Endpoint,
+    event_server_endpoint: Endpoint,
+    event_server_bitfield: usize,
     channel: RingBufferConfig,
 }
 
@@ -45,7 +46,7 @@ fn main(config: Config) -> Fallible<()> {
     log::debug!("log test +b");
 
     let channel = {
-        let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
+        let event_server = RPCClient::<EventServerRequest>::new(config.event_server_endpoint);
         let index = {
             use events::*;
             RealmOut::RingBuffer(RealmRingBufferOut::Host(RealmRingBufferId::Channel))
@@ -62,23 +63,25 @@ fn main(config: Config) -> Fallible<()> {
         )
     };
 
-    RuntimeManager::new(channel, config.event).run()
+    RuntimeManager::new(channel, config.event, config.event_server_bitfield).run()
 }
 
 struct RuntimeManager {
     channel: PacketRingBuffer,
     event: Notification,
+    event_server_bitfield: usize,
     active: bool,
 }
 
 impl RuntimeManager {
 
-    fn new(channel: RingBuffer, event: Notification) -> Self {
+    fn new(channel: RingBuffer, event: Notification, event_server_bitfield: usize) -> Self {
         channel.enable_notify_read();
         channel.enable_notify_write();
         Self {
             channel: PacketRingBuffer::new(channel),
             event,
+            event_server_bitfield,
             active: true,
         }
     }
@@ -181,6 +184,22 @@ impl RuntimeManager {
         })
     }
 
+    fn wait(&self) -> Fallible<()> {
+        return Ok(());
+        let bit_lots = self.event.wait();
+        for bit_lot_index in biterate::biterate(bit_lots) {
+            let bit_lot = unsafe {
+                &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
+            };
+            let bits = bit_lot.swap(0, core::sync::atomic::Ordering::SeqCst);
+            for bit in biterate::biterate(bits) {
+                let in_index = (bit_lot_index * 64 + bit) as usize;
+                debug_println!("in_index = {}", in_index);
+            }
+        }
+        Ok(())
+    }
+
     fn send(&mut self, resp: &Response) -> Fallible<()> {
         log::trace!("write: {:x?}", resp);
         let mut block = false;
@@ -189,7 +208,7 @@ impl RuntimeManager {
             log::debug!("host ring buffer full, waiting on notification");
             if block {
                 log::trace!("write: blocking");
-                self.event.wait();
+                self.wait()?;
                 log::trace!("write: unblocked");
             } else {
                 block = true;
@@ -208,10 +227,9 @@ impl RuntimeManager {
                 let req = deserialize(&msg).unwrap();
                 log::trace!("read: {:x?}", req);
                 return Ok(req);
-            }
-            if block {
+            } else if block {
                 log::trace!("read: blocking");
-                self.event.wait();
+                self.wait()?;
                 log::trace!("read: unblocked");
             } else {
                 block = true;

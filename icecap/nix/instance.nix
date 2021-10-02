@@ -32,7 +32,8 @@ in lib.fix (self: with self; {
   run = platUtils.${icecapPlat}.bundle {
     firmware = icecapFirmware.image;
     payload = icecapFirmware.mkDefaultPayload {
-      linuxImage = pkgs.linux.icecap.linuxKernel.host.${icecapPlat}.kernel;
+      # linuxImage = pkgs.linux.icecap.linuxKernel.host.${icecapPlat}.kernel;
+      linuxImage = ../../../local/linux/arch/arm64/boot/Image;
       initramfs = hostUser.config.build.initramfs;
       bootargs = [
         "earlycon=icecap_vmm"
@@ -80,6 +81,7 @@ in lib.fix (self: with self; {
     icecap-start-generic
     icecap-std-external
     icecap-event-server-types
+    biterate
   ]);
 
   icecapCrates = crateUtils.collectEnv (lib.attrValues icecapCratesAttrs);

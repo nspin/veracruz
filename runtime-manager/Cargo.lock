@@ -2341,6 +2341,7 @@ name = "runtime_manager_enclave"
 version = "0.3.0"
 dependencies = [
  "bincode",
+ "biterate",
  "bitflags",
  "byteorder 1.4.3",
  "err-derive",
