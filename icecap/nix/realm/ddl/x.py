@@ -1,23 +1,26 @@
-from capdl import ObjectType, Cap
-from icedl import *
+from icedl.common import GenericElfComponent
+from icedl.realm import BaseRealmComposition
 
-composition = start()
 
-veracruz_con = composition.extern_ring_buffer('realm_vmm_con', size=4096)
-sandbox_con = composition.extern_ring_buffer('realm_vm_con', size=4096)
-host_rb = composition.extern_ring_buffer('host_raw', 1 << 21)
-
-class RuntimeManager(GenericElfComponent):
+class VeracruzComposition(GenericElfComponent):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(affinity=2, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        channel = self.composition.extern_ring_buffer('realm_{}_channel_ring_buffer'.format(self.realm_id()), size=1<<21)
+
         self._arg = {
-            'host_ring_buffer': self.map_ring_buffer_with(host_rb, mapped=True),
+            'host_ring_buffer': self.map_ring_buffer_with(channel),
             }
 
     def arg_json(self):
         return self._arg
 
-runtime_manager = composition.component(RuntimeManager, 'runtime_manager')
 
-composition.complete()
+class Composition(BaseRealmComposition):
+
+    def compose(self):
+        self.component(Veracruz, 'veracruz')
+
+
+Composition.run()

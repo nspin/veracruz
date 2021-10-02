@@ -35,13 +35,13 @@ declare_generic_main!(main);
 struct Config {
     event: Notification,
     event_server: Endpoint,
-    host_ring_buffer: RingBufferConfig,
+    channel: RingBufferConfig,
 }
 
 fn main(config: Config) -> Fallible<()> {
     icecap_runtime_init();
 
-    let host_ring_buffer = {
+    let channel = {
         let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
         let index = {
             use events::*;
@@ -51,7 +51,7 @@ fn main(config: Config) -> Fallible<()> {
             index: index.to_nat(),
         }));
         RingBuffer::realize_resume(
-            &config.host_ring_buffer,
+            &config.channel,
             RingBufferKicksConfig {
                 read: kick.clone(),
                 write: kick,
@@ -59,22 +59,22 @@ fn main(config: Config) -> Fallible<()> {
         )
     };
 
-    RuntimeManager::new(host_ring_buffer, config.event).run()
+    RuntimeManager::new(channel, config.event).run()
 }
 
 struct RuntimeManager {
-    host_ring_buffer: PacketRingBuffer,
+    channel: PacketRingBuffer,
     event: Notification,
     active: bool,
 }
 
 impl RuntimeManager {
 
-    fn new(host_ring_buffer: RingBuffer, event: Notification) -> Self {
-        host_ring_buffer.enable_notify_read();
-        host_ring_buffer.enable_notify_write();
+    fn new(channel: RingBuffer, event: Notification) -> Self {
+        channel.enable_notify_read();
+        channel.enable_notify_write();
         Self {
-            host_ring_buffer: PacketRingBuffer::new(host_ring_buffer),
+            channel: PacketRingBuffer::new(channel),
             event,
             active: true,
         }
@@ -180,18 +180,18 @@ impl RuntimeManager {
 
     fn send(&mut self, resp: &Response) -> Fallible<()> {
         let resp_bytes = serialize(resp).unwrap();
-        while !self.host_ring_buffer.write(&resp_bytes) {
+        while !self.channel.write(&resp_bytes) {
             log::debug!("host ring buffer full, waiting on notification");
             self.event.wait();
         }
-        self.host_ring_buffer.notify_write();
+        self.channel.notify_write();
         Ok(())
     }
 
     fn recv(&mut self) -> Fallible<Request> {
         loop {
-            if let Some(msg) = self.host_ring_buffer.read() {
-                self.host_ring_buffer.notify_read();
+            if let Some(msg) = self.channel.read() {
+                self.channel.notify_read();
                 let req = deserialize(&msg).unwrap();
                 return Ok(req);
             }
