@@ -34,8 +34,6 @@ in {
       };
 
       initramfs.extraInitCommands = ''
-        mkdir -p /etc /bin /mnt/nix/store
-        ln -s $(which sh) /bin/sh
         mount -t debugfs none /sys/kernel/debug/
 
         date -s '@${now}' # HACK
@@ -49,6 +47,7 @@ in {
       net.interfaces.eth2 = {};
 
       initramfs.extraInitCommands = ''
+        mkdir /mnt/nix/store/
         mount -t 9p -o trans=virtio,version=9p2000.L,ro store /mnt/nix/store/
         spec=/mnt/$spec
       '';
@@ -62,7 +61,8 @@ in {
           echo 1500000 > scaling_setspeed
         )
 
-        mount -o ro /dev/mmcblk0p1 mnt/
+        mkdir /mnt/
+        mount -o ro /dev/mmcblk0p1 /mnt/
         spec=/mnt/spec.bin
       '';
     })
@@ -85,9 +85,9 @@ in {
 
           RUST_LOG=info \
           DATABASE_URL=proxy-attestation-server.db \
-          VERACRUZ_REALM_ID=0 \
-          VERACRUZ_REALM_SPEC=/spec.bin \
-          VERACRUZ_REALM_ENDPOINT=/dev/icecap_channel_realm_$VERACRUZ_REALM_ID \
+          VERACRUZ_ICECAP_REALM_ID=0 \
+          VERACRUZ_ICECAP_REALM_SPEC=/spec.bin \
+          VERACRUZ_ICECAP_REALM_ENDPOINT=/dev/icecap_channel_realm_$VERACRUZ_ICECAP_REALM_ID \
             $test_cmd --test-threads=1 --nocapture --show-output "$@"
         }
 

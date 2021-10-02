@@ -29,12 +29,12 @@ use veracruz_utils::{
 };
 use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
 
-const ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
-const REALM_ID_ENV: &str = "VERACRUZ_REALM_ID";
-const REALM_SPEC_ENV: &str = "VERACRUZ_REALM_SPEC";
-const REALM_ENDPOINT_ENV: &str = "VERACRUZ_REALM_ENDPOINT";
+const VERACRUZ_ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
+const VERACRUZ_ICECAP_REALM_ID_ENV: &str = "VERACRUZ_ICECAP_REALM_ID";
+const VERACRUZ_ICECAP_REALM_SPEC_ENV: &str = "VERACRUZ_ICECAP_REALM_SPEC";
+const VERACRUZ_ICECAP_REALM_ENDPOINT_ENV: &str = "VERACRUZ_ICECAP_REALM_ENDPOINT";
 
-const DEFAULT_ICECAP_HOST_COMMAND: &str = "icecap-host";
+const VERACRUZ_ICECAP_HOST_COMMAND_DEFAULT: &str = "icecap-host";
 
 type Result<T> = result::Result<T, VeracruzServerError>;
 
@@ -65,12 +65,12 @@ impl Configuration {
 
     fn from_env() -> Result<Self> {
         Ok(Self {
-            icecap_host_command: Self::env_var(ICECAP_HOST_COMMAND_ENV).map(PathBuf::from).unwrap_or(DEFAULT_ICECAP_HOST_COMMAND.into()),
-            realm_id: Self::env_var(REALM_ID_ENV)?.parse::<usize>().map_err(|_|
-                VeracruzServerError::IceCapError(IceCapError::InvalidEnvironemntVariableValue { variable: REALM_ID_ENV.to_string() })
+            icecap_host_command: Self::env_var(VERACRUZ_ICECAP_HOST_COMMAND_ENV).map(PathBuf::from).unwrap_or(VERACRUZ_ICECAP_HOST_COMMAND_DEFAULT.into()),
+            realm_id: Self::env_var(VERACRUZ_ICECAP_REALM_ID_ENV)?.parse::<usize>().map_err(|_|
+                VeracruzServerError::IceCapError(IceCapError::InvalidEnvironemntVariableValue { variable: VERACRUZ_ICECAP_REALM_ID_ENV.to_string() })
             )?,
-            realm_spec: Self::env_var(REALM_SPEC_ENV)?.into(),
-            realm_endpoint: Self::env_var(REALM_ENDPOINT_ENV)?.into(),
+            realm_spec: Self::env_var(VERACRUZ_ICECAP_REALM_SPEC_ENV)?.into(),
+            realm_endpoint: Self::env_var(VERACRUZ_ICECAP_REALM_ENDPOINT_ENV)?.into(),
         })
     }
 
