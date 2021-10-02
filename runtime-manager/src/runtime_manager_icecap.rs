@@ -42,8 +42,7 @@ struct Config {
 fn main(config: Config) -> Fallible<()> {
     debug_println!("runtime manager enter");
     icecap_runtime_init();
-    debug_println!("log test +a");
-    log::debug!("log test +b");
+    log::debug!("runtime manager enter");
 
     let channel = {
         let event_server = RPCClient::<EventServerRequest>::new(config.event_server_endpoint);
@@ -186,7 +185,9 @@ impl RuntimeManager {
 
     fn wait(&self) -> Fallible<()> {
         return Ok(());
+        log::trace!("blocking");
         let bit_lots = self.event.wait();
+        log::trace!("unblocked");
         for bit_lot_index in biterate::biterate(bit_lots) {
             let bit_lot = unsafe {
                 &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
@@ -207,9 +208,7 @@ impl RuntimeManager {
         while !self.channel.write(&resp_bytes) {
             log::debug!("host ring buffer full, waiting on notification");
             if block {
-                log::trace!("write: blocking");
                 self.wait()?;
-                log::trace!("write: unblocked");
             } else {
                 block = true;
                 self.channel.enable_notify_write();
@@ -220,6 +219,7 @@ impl RuntimeManager {
     }
 
     fn recv(&mut self) -> Fallible<Request> {
+        log::trace!("read enter");
         let mut block = false;
         loop {
             if let Some(msg) = self.channel.read() {
@@ -228,9 +228,7 @@ impl RuntimeManager {
                 log::trace!("read: {:x?}", req);
                 return Ok(req);
             } else if block {
-                log::trace!("read: blocking");
                 self.wait()?;
-                log::trace!("read: unblocked");
             } else {
                 block = true;
                 self.channel.enable_notify_read();
@@ -247,6 +245,7 @@ fn icecap_runtime_init() {
     std::icecap_impl::set_now(std::time::Duration::from_secs(NOW)); // HACK
     let mut logger = Logger::default();
     logger.level = Level::Trace;
+    // logger.level = Level::Debug;
     logger.display_mode = DisplayMode::Line;
     logger.write = |s| debug_println!("{}", s);
     logger.init().unwrap();

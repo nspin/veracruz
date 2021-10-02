@@ -78,7 +78,7 @@ in {
         VERACRUZ_REALM_ID=0 \
         VERACRUZ_REALM_SPEC=/spec.bin \
         VERACRUZ_REALM_ENDPOINT=/dev/icecap_channel_realm_$VERACRUZ_REALM_ID \
-          $test_cmd --test-threads=1 --show-output "$@"
+          taskset 0x2 $test_cmd --test-threads=1 --nocapture --show-output "$@"
       }
 
       # convenience

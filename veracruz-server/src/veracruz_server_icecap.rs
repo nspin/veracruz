@@ -86,9 +86,7 @@ impl Configuration {
 
     fn run_realm(&self) -> Result<Child> {
         let virtual_node_id: usize = 0;
-        let child = Command::new("taskset")
-            .arg("0x2")
-            .arg(&self.icecap_host_command)
+        let child = Command::new(&self.icecap_host_command)
             .arg("run")
             .arg(format!("{}", self.realm_id))
             .arg(format!("{}", virtual_node_id))
