@@ -74,13 +74,24 @@ struct RuntimeManager {
 impl RuntimeManager {
 
     fn new(channel: RingBuffer, event: Notification, event_server_bitfield: usize) -> Self {
-        channel.enable_notify_read();
-        channel.enable_notify_write();
-        Self {
+        let this = Self {
             channel: PacketRingBuffer::new(channel),
             event,
             event_server_bitfield,
             active: true,
+        };
+        this.reset();
+        this
+    }
+
+    fn reset(&self) {
+        self.channel.enable_notify_read();
+        self.channel.enable_notify_write();
+        for bit_lot_index in biterate::biterate(!0u64) {
+            let bit_lot = unsafe {
+                &*((self.event_server_bitfield + ((8 * bit_lot_index) as usize)) as *const core::sync::atomic::AtomicU64)
+            };
+            bit_lot.store(0, core::sync::atomic::Ordering::SeqCst);
         }
     }
 
@@ -183,9 +194,13 @@ impl RuntimeManager {
     }
 
     fn wait(&self) -> Fallible<()> {
-        return Ok(());
+        // return Ok(());
         log::trace!("waiting");
+        self.channel.enable_notify_read();
+        self.channel.enable_notify_write();
         let bit_lots = self.event.wait();
+        self.channel.enable_notify_read();
+        self.channel.enable_notify_write();
         log::trace!("done waiting");
         for bit_lot_index in biterate::biterate(bit_lots) {
             let bit_lot = unsafe {
@@ -214,6 +229,7 @@ impl RuntimeManager {
             }
         }
         self.channel.notify_write();
+        self.channel.kick_write(); // HACK
         Ok(())
     }
 
@@ -223,6 +239,7 @@ impl RuntimeManager {
         loop {
             if let Some(msg) = self.channel.read() {
                 self.channel.notify_read();
+                self.channel.kick_read(); // HACK
                 let req = deserialize(&msg).unwrap();
                 log::trace!("read: {:x?}", req);
                 return Ok(req);
@@ -243,9 +260,9 @@ fn icecap_runtime_init() {
     icecap_std_external::set_panic();
     std::icecap_impl::set_now(std::time::Duration::from_secs(NOW)); // HACK
     let mut logger = Logger::default();
-    // logger.level = Level::Trace;
+    logger.level = Level::Trace;
     // logger.level = Level::Debug;
-    logger.level = Level::Info;
+    // logger.level = Level::Info;
     logger.display_mode = DisplayMode::Line;
     logger.write = |s| debug_println!("{}", s);
     logger.init().unwrap();
