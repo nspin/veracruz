@@ -28,30 +28,48 @@ declare_generic_main!(main);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
+    event: Notification,
+    event_server_endpoint: Endpoint,
     host_ring_buffer: RingBufferConfig,
 }
 
 fn main(config: Config) -> Fallible<()> {
     icecap_runtime_init();
-    let host_ring_buffer = RingBuffer::realize_resume(&config.host_ring_buffer);
-    let host_ring_buffer_notification = config.host_ring_buffer.wait;
-    RuntimeManager::new(host_ring_buffer, host_ring_buffer_notification).run()
+
+    let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
+    let mk_signal = move |index: events::RealmOut| -> icecap_std::ring_buffer::Kick {
+        let event_server = event_server.clone();
+        let index = index.to_nat();
+        Box::new(move || event_server.call::<()>(&EventServerRequest::Signal {
+            index,
+        }))
+    };
+
+    let host_ring_buffer = RingBuffer::realize_resume(
+        &config.host_ring_buffer,
+        RingBufferKicksConfig {
+            read: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
+            write: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
+        },
+    );
+
+    RuntimeManager::new(host_ring_buffer, config.event).run()
 }
 
 struct RuntimeManager {
     host_ring_buffer: PacketRingBuffer,
-    host_ring_buffer_notification: Notification,
+    event: Notification,
     active: bool,
 }
 
 impl RuntimeManager {
 
-    fn new(host_ring_buffer: RingBuffer, host_ring_buffer_notification: Notification) -> Self {
+    fn new(host_ring_buffer: RingBuffer, event: Notification) -> Self {
         host_ring_buffer.enable_notify_read();
         host_ring_buffer.enable_notify_write();
         Self {
             host_ring_buffer: PacketRingBuffer::new(host_ring_buffer),
-            host_ring_buffer_notification,
+            event,
             active: true,
         }
     }
@@ -158,7 +176,7 @@ impl RuntimeManager {
         let resp_bytes = serialize(resp).unwrap();
         while !self.host_ring_buffer.write(&resp_bytes) {
             log::debug!("host ring buffer full, waiting on notification");
-            self.host_ring_buffer_notification.wait();
+            self.event.wait();
         }
         self.host_ring_buffer.notify_write();
         Ok(())
@@ -171,7 +189,7 @@ impl RuntimeManager {
                 let req = deserialize(&msg).unwrap();
                 return Ok(req);
             }
-            self.host_ring_buffer_notification.wait();
+            self.event.wait();
         }
     }
 
