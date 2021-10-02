@@ -43,18 +43,18 @@ fn main(config: Config) -> Fallible<()> {
 
     let host_ring_buffer = {
         let event_server = RPCClient::<EventServerRequest>::new(config.event_server);
-        let mk_signal = move |index: events::RealmOut| -> icecap_core::ring_buffer::Kick {
-            let event_server = event_server.clone();
-            let index = index.to_nat();
-            Box::new(move || event_server.call::<()>(&EventServerRequest::Signal {
-                index,
-            }))
+        let index = {
+            use events::*;
+            RealmOut::RingBuffer(RealmRingBufferOut::Host(RealmRingBufferId::Channel))
         };
+        let kick = Box::new(move || event_server.call::<()>(&EventServerRequest::Signal {
+            index: index.to_nat(),
+        }));
         RingBuffer::realize_resume(
             &config.host_ring_buffer,
             RingBufferKicksConfig {
-                read: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
-                write: mk_signal(events::RealmOut::RingBuffer(events::RealmRingBufferOut::Host)),
+                read: kick.clone(),
+                write: kick,
             },
         )
     };
