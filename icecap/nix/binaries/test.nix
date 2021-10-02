@@ -1,24 +1,24 @@
 { lib, stdenv, hostPlatform, buildPackages, mkShell
-, llvmPackages
 , rustc, cargo, git, cacert
+, crateUtils, nixToToml
+, llvmPackages
 , pkgconfig, protobuf, perl, python3
 , openssl, sqlite
-, crateUtils, nixToToml
 }:
 
 { name }:
 
 let
+
+  manifestPath = toString ../../.. + "/${name}/Cargo.toml";
+
+  debug = false;
+
   libclang = (llvmPackages.libclang.nativeDrv or llvmPackages.libclang).lib;
 
   cargoConfig = nixToToml (crateUtils.clobber [
     crateUtils.baseCargoConfig
   ]);
-
-  # debug = true;
-  debug = false;
-
-  manifestPath = toString ../../.. + "/${name}/Cargo.toml";
 
 in
 
@@ -69,6 +69,7 @@ mkShell (crateUtils.baseEnv // rec {
         --target ${hostPlatform.config} --features icecap \
         ${lib.optionalString (!debug) "--release"} \
         -j $NIX_BUILD_CORES \
+        --target-dir ./target \
         $@
       ) && \
       distinguish
@@ -80,7 +81,7 @@ mkShell (crateUtils.baseEnv // rec {
     }
 
     distinguish() {
-      d=$build_dir/target/aarch64-unknown-linux-gnu/${if debug then "debug" else "release"}/deps
+      d=$build_dir/target/${hostPlatform.config}/${if debug then "debug" else "release"}/deps
       f="$(find $d -executable -type f -printf "%T@ %p\n" \
         | sort -n \
         | tail -n 1 \
