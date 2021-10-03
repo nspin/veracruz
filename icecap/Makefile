@@ -41,7 +41,6 @@ veracruz-test: setup
 test-resources:
 	$(MAKE) -C ../sdk
 	TEE=icecap $(MAKE) -C ../test-collateral
-	cd ../veracruz-server-test && sh populate-test-database.sh
 
 .PHONY: test-system
 test-system: $(now) runtime-manager veracruz-server-test veracruz-test test-resources

@@ -12,15 +12,24 @@
 use core::sync::atomic::{AtomicU64, Ordering};
 use crate::Result;
 
-// HACK
-// Placeholder generator with a fixed seed and a period of 2**61
+static RNG_STATE: AtomicU64 = AtomicU64::new(0);
 
-static STATE: AtomicU64 = AtomicU64::new(0);
-
-pub fn platform_getrandom(buffer: &mut [u8]) -> Result {
+/// Fill `buffer` with random bytes.
+/// Uses a placeholder generator with a fixed seed and a period of 2**61.
+pub fn platform_getrandom(buffer: &mut [u8]) -> Result<()> {
     for b in buffer {
-        let state = STATE.fetch_add(1, Ordering::SeqCst);
+        let state = RNG_STATE.fetch_add(1, Ordering::SeqCst);
         *b = state.to_ne_bytes()[(state & 0b111) as usize];
     }
-    Result::Success
+    Result::Success(())
+}
+
+/// Returns the clock resolution in nanoseconds.
+pub fn platform_getclockres(_clock_id: u8) -> Result<u64> {
+    Result::Unavailable
+}
+
+/// Returns the clock time in nanoseconds.
+pub fn platform_getclocktime(_clock_id: u8) -> Result<u64> {
+    Result::Unavailable
 }
