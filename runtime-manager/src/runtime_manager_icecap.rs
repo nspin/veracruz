@@ -198,9 +198,13 @@ impl RuntimeManager {
     }
 
     fn handle_attestation(&self, device_id: i32, challenge: &[u8]) -> Result<(Vec<u8>, Vec<u8>), RuntimeManagerError> {
-        let token = todo!();
-        let csr = todo!();
+        let csr = session_manager::generate_csr()?;
+        let token = self.native_attestation(&challenge, &csr)?;
         Ok((token, csr))
+    }
+
+    fn native_attestation(&self, challenge: &[u8], csr: &[u8]) -> Result<Vec<u8>, RuntimeManagerError> {
+        todo!()
     }
 
     fn wait(&self) {
