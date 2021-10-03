@@ -281,9 +281,70 @@ mod libm_hack {
 mod attestation_hack {
 
     use super::RuntimeManagerError;
+    use ring::digest;
+
+    const EXAMPLE_PRIVATE_KEY: [u8; 32] = [
+        0xe6, 0xbf, 0x1e, 0x3d, 0xb4, 0x45, 0x42, 0xbe,
+        0xf5, 0x35, 0xe7, 0xac, 0xbc, 0x2d, 0x54, 0xd0,
+        0xba, 0x94, 0xbf, 0xb5, 0x47, 0x67, 0x2c, 0x31,
+        0xc1, 0xd4, 0xee, 0x1c, 0x05, 0x76, 0xa1, 0x44,
+    ];
+
+    const EXAMPLE_HASH: [u8; 32] = [
+        0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+        0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+        0xf0, 0x0d, 0xca, 0xfe, 0xf0, 0x0d, 0xca, 0xfe,
+        0xf0, 0x0d, 0xca, 0xfe, 0xf0, 0x0d, 0xca, 0xfe,
+    ];
+
+    const ROOT_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
+
+    const RUNTIME_MANAGER_HASH: &[u8] = &EXAMPLE_HASH;
+
 
     pub(super) fn native_attestation(challenge: &[u8], csr: &[u8]) -> Result<Vec<u8>, RuntimeManagerError> {
-        todo!()
+
+        let root_private_key = &ROOT_PRIVATE_KEY;
+        let enclave_hash = &RUNTIME_MANAGER_HASH;
+        let csr_hash = digest::digest(&digest::SHA256, csr);
+
+        let mut root_key_handle: u16 = 0;
+        assert_eq!(0, unsafe {
+            psa_attestation::psa_initial_attest_load_key(
+                root_private_key.as_ptr(),
+                root_private_key.len() as u64,
+                &mut root_key_handle,
+            )
+        });
+
+        let mut token: Vec<u8> = Vec::with_capacity(2048);
+        let mut token_len: u64 = 0;
+        assert_eq!(0, unsafe {
+            psa_attestation::psa_initial_attest_get_token(
+                enclave_hash.as_ptr() as *const u8,
+                enclave_hash.len() as u64,
+                csr_hash.as_ref().as_ptr() as *const u8,
+                csr_hash.as_ref().len() as u64,
+                std::ptr::null() as *const u8,
+                0,
+                challenge.as_ptr() as *const u8,
+                challenge.len() as u64,
+                token.as_mut_ptr() as *mut u8,
+                token.capacity() as u64,
+                &mut token_len as *mut u64,
+            )
+        });
+        unsafe {
+            token.set_len(token_len as usize)
+        };
+
+        assert_eq!(0, unsafe {
+            psa_attestation::psa_initial_attest_remove_key(
+                root_key_handle,
+            )
+        });
+
+        token
     }
 
 }
@@ -294,25 +355,9 @@ mod attestation_hack_old {
     use once_cell::sync::OnceCell;
     use super::Result;
 
-    const EXAMPLE_HASH: [u8; 32] = [
-        0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-        0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-        0xf0, 0x0d, 0xca, 0xfe, 0xf0, 0x0d, 0xca, 0xfe,
-        0xf0, 0x0d, 0xca, 0xfe, 0xf0, 0x0d, 0xca, 0xfe,
-    ];
-
-    const EXAMPLE_PRIVATE_KEY: [u8; 32] = [
-        0xe6, 0xbf, 0x1e, 0x3d, 0xb4, 0x45, 0x42, 0xbe,
-        0xf5, 0x35, 0xe7, 0xac, 0xbc, 0x2d, 0x54, 0xd0,
-        0xba, 0x94, 0xbf, 0xb5, 0x47, 0x67, 0x2c, 0x31,
-        0xc1, 0xd4, 0xee, 0x1c, 0x05, 0x76, 0xa1, 0x44,
-    ];
-
-    const RUNTIME_MANAGER_HASH: &[u8] = &EXAMPLE_HASH;
     const ROOT_HASH: &[u8] = &EXAMPLE_HASH;
 
     const DEVICE_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
-    const ROOT_PRIVATE_KEY: &[u8] = &EXAMPLE_PRIVATE_KEY;
 
     const FIRMWARE_VERSION: &str = "0.3.0";
 

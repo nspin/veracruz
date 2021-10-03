@@ -2,7 +2,7 @@
 , rustc, cargo, git, cacert
 , crateUtils, nixToToml
 , protobuf, perl
-, liboutline, sysroot-rs
+, libs, liboutline, sysroot-rs
 , icecapCrates
 }:
 
@@ -43,6 +43,7 @@ mkShell (crateUtils.baseEnv // {
 
   buildInputs = [
     liboutline
+    libs.icecap-pure
   ];
 
   shellHook = ''

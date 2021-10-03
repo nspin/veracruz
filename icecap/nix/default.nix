@@ -8,8 +8,8 @@ let
 
   icecapLocal = ../../../icecap;
 
-  icecapSource = icecapRemote;
-  # icecapSource = icecapLocal;
+  # icecapSource = icecapRemote;
+  icecapSource = icecapLocal;
 
   icecap = import icecapSource;
 
