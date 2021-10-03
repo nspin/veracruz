@@ -31,6 +31,7 @@ veracruz-server-test: setup
 veracruz-test: setup
 	$(nix_shell) $(nix_expression) -A $@ --run build
 
+# must be run inside of container
 .PHONY: test-resources
 test-resources:
 	$(MAKE) -C ../sdk
