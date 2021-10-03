@@ -27,7 +27,10 @@ use veracruz_utils::{
     policy::policy::Policy,
     platform::icecap::message::{Request, Response, Header},
 };
-use crate::veracruz_server::{VeracruzServer, VeracruzServerError};
+use crate::{
+    veracruz_server::{VeracruzServer, VeracruzServerError},
+    send_proxy_attestation_server_start,
+};
 
 const VERACRUZ_ICECAP_HOST_COMMAND_ENV: &str = "VERACRUZ_ICECAP_HOST_COMMAND";
 const VERACRUZ_ICECAP_REALM_ID_ENV: &str = "VERACRUZ_ICECAP_REALM_ID";
@@ -125,18 +128,12 @@ pub struct VeracruzServerIceCap {
     configuration: Configuration,
     realm_channel: Mutex<File>,
     realm_process: Child,
-
-    // HACK
-    device_id: i32,
 }
 
 impl VeracruzServer for VeracruzServerIceCap {
 
     fn new(policy_json: &str) -> Result<Self> {
-
         let policy: Policy = Policy::from_json(policy_json)?;
-
-        let device_id = hack::native_attestation(&policy.proxy_attestation_server_url())?;
 
         let configuration = Configuration::from_env()?;
         configuration.destroy_realm()?; // HACK
@@ -150,60 +147,55 @@ impl VeracruzServer for VeracruzServerIceCap {
             configuration,
             realm_channel,
             realm_process,
-            device_id,
         };
-        match server.send(&Request::New { policy_json: policy_json.to_string() })? {
-            Response::New => (),
+
+        match server.send(&Request::Initialize { policy_json: policy_json.to_string() })? {
+           Response::Initialize => (),
+           resp => return Err(VeracruzServerError::IceCapError(IceCapError::UnexpectedRuntimeManagerResponse(resp))),
+        }
+
+        let (challenge, device_id) = {
+            let resp = send_proxy_attestation_server_start(
+                policy.proxy_attestation_server_url(), "psa", "0.3.0",
+            ).unwrap();
+            assert!(resp.has_psa_attestation_init());
+            transport_protocol::parse_psa_attestation_init(
+                resp.get_psa_attestation_init(),
+            ).unwrap()
+        };
+
+        let (token, csr) = match server.send(&Request::Attestation { challenge, device_id })? {
+            Response::Attestation { token, csr } => (token, csr),
+            resp => return Err(VeracruzServerError::IceCapError(IceCapError::UnexpectedRuntimeManagerResponse(resp))),
+        };
+
+        let (root_cert, compute_cert) = {
+            let req = transport_protocol::serialize_native_psa_attestation_token(&token, &csr, device_id).unwrap();
+            let req = base64::encode(&req);
+            let url = format!("{:}/PSA/AttestationToken", policy.proxy_attestation_server_url());
+            let resp = crate::post_buffer(&url, &req)?;
+            let resp = base64::decode(&resp)?;
+            let pasr = transport_protocol::parse_proxy_attestation_server_response(&resp).unwrap();
+            let cert_chain = pasr.get_cert_chain();
+            let root_cert = cert_chain.get_root_cert();
+            let compute_cert = cert_chain.get_enclave_cert();
+            (root_cert.to_vec(), compute_cert.to_vec())
+        };
+
+        match server.send(&Request::CertificateChain { root_cert, compute_cert })? {
+            Response::CertificateChain => (),
             resp => return Err(VeracruzServerError::IceCapError(IceCapError::UnexpectedRuntimeManagerResponse(resp))),
         }
+
         Ok(server)
     }
 
-    fn proxy_psa_attestation_get_token(
-        &mut self,
-        challenge: Vec<u8>,
-    ) -> Result<(Vec<u8>, Vec<u8>, i32)> {
-        let enclave_cert = self.get_enclave_cert()?;
-        let (token, device_public_key) = hack::proxy_attesation(&challenge, &enclave_cert)?;
-        Ok((token, device_public_key, self.device_id))
-    }
-
-    fn plaintext_data(&mut self, data: Vec<u8>) -> Result<Option<Vec<u8>>> {
+    fn plaintext_data(&self, data: Vec<u8>) -> Result<Option<Vec<u8>>> {
         let parsed = transport_protocol::parse_runtime_manager_request(&data)?;
-
-        if parsed.has_request_proxy_psa_attestation_token() {
-            let rpat = parsed.get_request_proxy_psa_attestation_token();
-            let challenge = transport_protocol::parse_request_proxy_psa_attestation_token(rpat);
-            let (psa_attestation_token, pubkey, device_id) =
-                self.proxy_psa_attestation_get_token(challenge)?;
-            let serialized_pat = transport_protocol::serialize_proxy_psa_attestation_token(
-                &psa_attestation_token,
-                &pubkey,
-                device_id,
-            )?;
-            Ok(Some(serialized_pat))
-        } else {
-            Err(VeracruzServerError::MissingFieldError(
-                "plaintext_data proxy_psa_attestation_token",
-            ))
-        }
+        unimplemented!()
     }
 
-    fn get_enclave_cert(&mut self) -> Result<Vec<u8>> {
-       match self.send(&Request::GetEnclaveCert)? {
-           Response::GetEnclaveCert(cert) => Ok(cert),
-           resp => Err(VeracruzServerError::IceCapError(IceCapError::UnexpectedRuntimeManagerResponse(resp))),
-       }
-    }
-
-    fn get_enclave_name(&mut self) -> Result<String> {
-       match self.send(&Request::GetEnclaveName)? {
-           Response::GetEnclaveName(name) => Ok(name),
-           resp => Err(VeracruzServerError::IceCapError(IceCapError::UnexpectedRuntimeManagerResponse(resp))),
-       }
-    }
-
-    fn new_tls_session(&mut self) -> Result<u32> {
+    fn new_tls_session(&self) -> Result<u32> {
        match self.send(&Request::NewTlsSession)? {
            Response::NewTlsSession(session_id) => Ok(session_id),
            resp => Err(VeracruzServerError::IceCapError(IceCapError::UnexpectedRuntimeManagerResponse(resp))),
@@ -285,4 +277,3 @@ impl VeracruzServerIceCap {
     }
 
 }
-
