@@ -286,7 +286,10 @@ mod c_hack {
 
     #[no_mangle]
     extern "C" fn free(ptr: *mut core::ffi::c_void) {
-        todo!()
+        unsafe {
+            // TODO is this sound?
+            Box::<u8>::from_raw(ptr as *mut u8);
+        }
     }
 }
 
