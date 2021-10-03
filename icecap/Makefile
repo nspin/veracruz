@@ -48,8 +48,8 @@ veracruz-test: setup
 	$(nix_shell) $(nix_expression) -A $@ --run build
 
 .PHONY: test-resources
-test-resources: setup
-	$(MAKE) -C .. test_cases
+test-resources:
+	TEE=icecap $(MAKE) -C ../test-collateral
 	cd ../veracruz-server-test && sh populate-test-database.sh
 
 .PHONY: test-system
