@@ -18,7 +18,8 @@ nitro = []
 icecap = []
 
 [dependencies]
-libc = { git = "https://github.com/veracruz-project/libc.git", branch = "veracruz" }
+# libc = { git = "https://github.com/veracruz-project/libc.git", branch = "veracruz" }
+libc = { git = "https://gitlab.com/arm-research/security/icecap/minor-patches/rust/libc.git", branch = "icecap" }
 
 [build-dependencies]
 bindgen = "0.53.1"
