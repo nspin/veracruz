@@ -20,7 +20,7 @@ let
     veracruz-test = ../build/veracruz-test/out/veracruz-test;
   };
 
-  proxyAttestationServerTestDatabase = ../../veracruz-server-test/proxy-attestation-server.db;
+  proxyAttestationServerTestDatabase = ../../test-collateral/proxy-attestation-server.db;
 
 in lib.fix (self: with self; {
 

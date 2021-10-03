@@ -1876,12 +1876,12 @@ dependencies = [
 [[package]]
 name = "libc"
 version = "0.2.69"
-source = "git+https://github.com/veracruz-project/libc.git?branch=veracruz#f851a1893bd20d804c707407be63961ce6f5373f"
+source = "git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?branch=veracruz#a1954b8a95dd77e396fb86e21dea2dec3fa5d9a4"
 
 [[package]]
 name = "libc"
-version = "0.2.69"
-source = "git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?branch=veracruz#a1954b8a95dd77e396fb86e21dea2dec3fa5d9a4"
+version = "0.2.71"
+source = "git+https://gitlab.com/arm-research/security/icecap/minor-patches/rust/libc.git?branch=icecap#bcb2c71ab1377db89ca6bca3e234b8f9ea20c012"
 
 [[package]]
 name = "libc"
@@ -2298,7 +2298,7 @@ version = "0.1.0"
 source = "git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?branch=veracruz#a1954b8a95dd77e396fb86e21dea2dec3fa5d9a4"
 dependencies = [
  "bitflags",
- "libc 0.2.69 (git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?branch=veracruz)",
+ "libc 0.2.69",
  "optee-utee-macros",
  "optee-utee-sys",
 ]
@@ -2317,7 +2317,7 @@ name = "optee-utee-sys"
 version = "0.1.0"
 source = "git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?branch=veracruz#a1954b8a95dd77e396fb86e21dea2dec3fa5d9a4"
 dependencies = [
- "libc 0.2.69 (git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?branch=veracruz)",
+ "libc 0.2.69",
 ]
 
 [[package]]
@@ -2705,7 +2705,7 @@ dependencies = [
  "bindgen",
  "cfg-if 1.0.0",
  "cmake",
- "libc 0.2.69 (git+https://github.com/veracruz-project/libc.git?branch=veracruz)",
+ "libc 0.2.71",
  "target_build_utils",
 ]
 
