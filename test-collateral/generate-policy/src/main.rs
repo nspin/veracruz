@@ -650,7 +650,7 @@ fn compute_nitro_enclave_hash(arguments: &Arguments) -> Option<String> {
 }
 
 // HACK attestation not yet implemented for IceCap
-fn compute_icecap_enclave_hash(arguments: &Arguments) -> Option<String> {
+fn compute_icecap_enclave_hash(_arguments: &Arguments) -> Option<String> {
     Some("deadbeefdeadbeefdeadbeefdeadbeeff00dcafef00dcafef00dcafef00dcafe".to_string())
 }
 

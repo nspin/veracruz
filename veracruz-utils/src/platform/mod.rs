@@ -51,6 +51,7 @@ impl FromStr for Platform {
             "sgx"       => Ok(Platform::SGX),
             "trustzone" => Ok(Platform::TrustZone),
             "nitro"     => Ok(Platform::Nitro),
+            "icecap"    => Ok(Platform::IceCap),
             _           => Err(PlatformError::InvalidPlatform(format!("{}", s))),
         }
     }
@@ -63,6 +64,7 @@ impl fmt::Display for Platform {
             Platform::SGX        => write!(f, "sgx"),
             Platform::TrustZone  => write!(f, "trustzone"),
             Platform::Nitro      => write!(f, "nitro"),
+            Platform::IceCap     => write!(f, "icecap"),
             Platform::Mock       => write!(f, "mock"),
         }
     }
