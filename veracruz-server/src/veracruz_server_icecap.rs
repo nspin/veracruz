@@ -39,7 +39,7 @@ const VERACRUZ_ICECAP_REALM_ENDPOINT_ENV: &str = "VERACRUZ_ICECAP_REALM_ENDPOINT
 
 const VERACRUZ_ICECAP_HOST_COMMAND_DEFAULT: &str = "icecap-host";
 
-// const FIRMWARE_VERSION: &str = "0.3.0";
+const FIRMWARE_VERSION: &str = "0.3.0";
 
 type Result<T> = result::Result<T, VeracruzServerError>;
 
@@ -158,7 +158,7 @@ impl VeracruzServer for VeracruzServerIceCap {
 
         let (challenge, device_id) = {
             let resp = send_proxy_attestation_server_start(
-                policy.proxy_attestation_server_url(), "psa", "0.3.0",
+                policy.proxy_attestation_server_url(), "psa", FIRMWARE_VERSION,
             ).unwrap();
             assert!(resp.has_psa_attestation_init());
             transport_protocol::parse_psa_attestation_init(
