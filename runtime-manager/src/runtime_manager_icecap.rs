@@ -262,7 +262,10 @@ fn icecap_runtime_init() {
 }
 
 // HACK
-mod libm_hack {
+mod c_hack {
+
+    use core::mem::MaybeUninit;
+    use super::alloc::boxed::Box;
 
     #[no_mangle]
     extern "C" fn fmod(x: f64, y: f64) -> f64 {
@@ -272,6 +275,18 @@ mod libm_hack {
     #[no_mangle]
     extern "C" fn fmodf(x: f32, y: f32) -> f32 {
         libm::fmodf(x, y)
+    }
+
+    #[no_mangle]
+    extern "C" fn calloc(nelem: usize, elsize: usize) -> *mut core::ffi::c_void {
+        let bytes = nelem * elsize;
+        let ret: *mut [MaybeUninit<u8>] = Box::into_raw(Box::<[u8]>::new_uninit_slice(bytes));
+        ret as *mut core::ffi::c_void
+    }
+
+    #[no_mangle]
+    extern "C" fn free(ptr: *mut core::ffi::c_void) {
+        todo!()
     }
 }
 
@@ -342,7 +357,7 @@ mod attestation_hack {
             )
         });
 
-        token
+        Ok(token)
     }
 
 }

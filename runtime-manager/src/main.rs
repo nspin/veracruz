@@ -13,6 +13,7 @@
 #![crate_name = "runtime_manager_enclave"]
 #![feature(rustc_private)]
 #![feature(format_args_nl)]
+#![feature(new_uninit)]
 
 #[cfg(feature = "tz")]
 pub mod runtime_manager_trustzone;

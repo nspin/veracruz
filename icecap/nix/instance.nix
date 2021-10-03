@@ -3,7 +3,7 @@
 let
 
   inherit (pkgs.dev) runCommand nukeReferences;
-  inherit (pkgs.none.icecap) crateUtils elfUtils platUtils;
+  inherit (pkgs.none.icecap) icecapSrc crateUtils elfUtils platUtils;
   inherit (pkgs.linux.icecap) linuxKernel nixosLite;
 
   inherit (configured)
@@ -87,7 +87,7 @@ in lib.fix (self: with self; {
 
   env = {
     runtime-manager = configured.callPackage ./binaries/runtime-manager.nix {
-      inherit icecapCrates;
+      inherit icecapCrates fakeLibc;
     };
     veracruz-server-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-server-test";
@@ -95,6 +95,15 @@ in lib.fix (self: with self; {
     veracruz-test = pkgs.linux.icecap.callPackage ./binaries/test.nix {} {
       name = "veracruz-test";
     };
+  };
+
+  fakeLibc = configured.libs.mk {
+    name = "fake-libc";
+    root = icecapSrc.absoluteSplit ./realm/fake-libc;
+    propagatedBuildInputs = [
+      configured.libs.icecap-pure
+      configured.libs.icecap-utils
+    ];
   };
 
   testCollateral = runCommand "test-collateral" {

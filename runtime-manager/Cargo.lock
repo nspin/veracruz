@@ -1850,7 +1850,7 @@ source = "git+https://github.com/veracruz-project/rust-optee-trustzone-sdk.git?b
 [[package]]
 name = "libc"
 version = "0.2.71"
-source = "git+https://gitlab.com/arm-research/security/icecap/minor-patches/rust/libc.git?branch=icecap#1d30655bc094bfdc36cd10547b409f3b3989248c"
+source = "git+https://gitlab.com/arm-research/security/icecap/minor-patches/rust/libc.git?branch=icecap#bcb2c71ab1377db89ca6bca3e234b8f9ea20c012"
 
 [[package]]
 name = "libc"
