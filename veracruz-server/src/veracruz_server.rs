@@ -168,7 +168,7 @@ pub enum VeracruzServerError {
     #[error(display = "VeracruzServer: Direct response message {}.", _0)]
     DirectMessageError(String, StatusCode),
     #[error(display = "VeracruzServer: Error message {}.", _0)]
-    DirectStringError(String),
+    DirectStrError(&'static str),
     #[error(display = "VeracruzServer: Unimplemented")]
     UnimplementedError,
     #[error(display = "VeracruzServer: Invalid runtime manager hash")]
