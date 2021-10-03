@@ -1942,6 +1942,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
+name = "local_ipaddress"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6a104730949fbc4c78e4fa98ed769ca0faa02e9818936b61032d2d77526afa9"
+
+[[package]]
 name = "lock_api"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2126,9 +2132,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "nitro-enclave-token"
+name = "nitro-enclave-attestation-document"
 version = "0.1.0"
-source = "git+https://github.com/veracruz-project/nitro-enclave-token.git?branch=main#ffb31ef69225652bae9715e26695fca77e92b0d7"
+source = "git+https://github.com/veracruz-project/nitro-enclave-attestation-document.git?branch=main#a5b82def6f74305c054e79ebdca66b41e90d0508"
 dependencies = [
  "aws-nitro-enclaves-cose",
  "byteorder 1.4.3",
@@ -2136,6 +2142,7 @@ dependencies = [
  "rustls",
  "serde 1.0.130",
  "serde_cbor",
+ "serde_with",
  "webpki",
 ]
 
@@ -2672,8 +2679,9 @@ dependencies = [
  "futures 0.3.17",
  "hex 0.4.2",
  "lazy_static",
+ "log 0.4.13",
  "nb-connect",
- "nitro-enclave-token",
+ "nitro-enclave-attestation-document",
  "openssl",
  "percent-encoding 2.1.0",
  "psa-attestation",
@@ -3117,6 +3125,7 @@ version = "0.3.0"
 dependencies = [
  "bindgen",
  "bitflags",
+ "glob",
 ]
 
 [[package]]
@@ -3392,9 +3401,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "1.10.0"
+version = "1.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "062b87e45d8f26714eacfaef0ed9a583e2bfd50ebd96bdd3c200733bd5758e2c"
+checksum = "1ad9fdbb69badc8916db738c25efd04f0a65297d26c2f8de4b62e57b8c12bc72"
 dependencies = [
  "rustversion",
  "serde 1.0.130",
@@ -3419,6 +3428,7 @@ version = "0.3.0"
 dependencies = [
  "bindgen",
  "bitflags",
+ "glob",
 ]
 
 [[package]]
@@ -4246,6 +4256,7 @@ dependencies = [
  "curl",
  "err-derive",
  "hex 0.4.2",
+ "http 0.2.4",
  "percent-encoding 2.1.0",
  "rand 0.7.3",
  "reqwest",
@@ -4313,10 +4324,13 @@ dependencies = [
  "err-derive",
  "futures 0.3.17",
  "hex 0.4.2",
+ "http 0.2.4",
  "lazy_static",
+ "local_ipaddress",
  "log 0.4.13",
  "pinecone",
  "proxy-attestation-server",
+ "regex 1.5.4",
  "ring 0.16.20",
  "serde 1.0.130",
  "serde_json 1.0.68",
@@ -4342,6 +4356,7 @@ dependencies = [
  "hex 0.4.2",
  "http 0.2.4",
  "nix",
+ "ring 0.16.11",
  "rustls",
  "serde 1.0.115",
  "serde_json 1.0.51",

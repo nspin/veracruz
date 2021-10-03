@@ -111,8 +111,8 @@ impl RuntimeManager {
             }
             Request::GetEnclaveCert => {
                 match session_manager::get_enclave_cert_pem() {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(cert) => {
@@ -122,8 +122,8 @@ impl RuntimeManager {
             }
             Request::GetEnclaveName => {
                 match session_manager::get_enclave_name() {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(name) => {
@@ -133,8 +133,8 @@ impl RuntimeManager {
             }
             Request::NewTlsSession => {
                 match session_manager::new_session() {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(sess) => {
@@ -144,8 +144,8 @@ impl RuntimeManager {
             }
             Request::CloseTlsSession(sess) => {
                 match session_manager::close_session(*sess) {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(()) => {
@@ -155,8 +155,8 @@ impl RuntimeManager {
             }
             Request::SendTlsData(sess, data) => {
                 match session_manager::send_data(*sess, data) {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(()) => {
@@ -166,8 +166,8 @@ impl RuntimeManager {
             }
             Request::GetTlsDataNeeded(sess) => {
                 match session_manager::get_data_needed(*sess) {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok(needed) => {
@@ -177,8 +177,8 @@ impl RuntimeManager {
             }
             Request::GetTlsData(sess) => {
                 match session_manager::get_data(*sess) {
-                    Err(s) => {
-                        log::warn!("{}", s);
+                    Err(e) => {
+                        log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
                     Ok((active, data)) => {
