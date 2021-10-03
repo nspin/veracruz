@@ -11,10 +11,8 @@ nix_binary_cache_flags := \
 	--option extra-trusted-public-keys $(nix_binary_cache_public_key)
 
 nix_build := nix-build $(nix_binary_cache_flags) -j$(shell nproc)
-nix_shell := nix-shell $(nix_binary_cache_flags) -j$(shell nproc) --pure
+nix_shell := NIX_BUILD_SHELL=bash nix-shell $(nix_binary_cache_flags) -j$(shell nproc) --pure
 nix_expression := targets.nix
-
-export NIX_BUILD_SHELL := bash
 
 .PHONY: all
 all:
@@ -22,14 +20,6 @@ all:
 .PHONY: clean
 clean:
 	rm -rf $(crates_dir) $(build_dir)
-
-# NOTE To be run outside of Docker the container.
-.PHONY: deep-clean
-deep-clean: clean
-	if [ -d $(nix_root) ]; then \
-		chmod -R u+w $(nix_root); \
-		rm -rf $(nix_root); \
-	fi
 
 .PHONY: setup
 setup:
@@ -49,9 +39,9 @@ veracruz-test: setup
 
 .PHONY: test-resources
 test-resources:
-	# $(MAKE) -C ../sdk
+	$(MAKE) -C ../sdk
 	TEE=icecap $(MAKE) -C ../test-collateral
-	# cd ../veracruz-server-test && sh populate-test-database.sh
+	cd ../veracruz-server-test && sh populate-test-database.sh
 
 .PHONY: test-system
 test-system: $(now) runtime-manager veracruz-server-test veracruz-test test-resources
