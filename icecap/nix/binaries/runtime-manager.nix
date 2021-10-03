@@ -53,9 +53,9 @@ mkShell (crateUtils.baseEnv // {
   ];
 
   NIX_LDFLAGS = [
+    "-lfake_libc"
     "-licecap_pure"
     "-licecap_utils"
-    "-lfake_libc"
   ];
 
   shellHook = ''
