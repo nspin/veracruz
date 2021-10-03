@@ -31,9 +31,6 @@ hex = { version = "=0.4.2", default-features = false }
 wasi-types = { git = "https://github.com/veracruz-project/wasi-types.git", branch = "veracruz" }
 ring = { git = "https://github.com/veracruz-project/ring.git", version = "=0.16.11", branch = "veracruz", optional = true }
 
-# HACK
-http = "=0.2.4"
-
 [build-dependencies]
 uuid = { version = "0.7", features = ["v4"] }
 
