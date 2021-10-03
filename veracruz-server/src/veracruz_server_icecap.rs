@@ -39,6 +39,8 @@ const VERACRUZ_ICECAP_REALM_ENDPOINT_ENV: &str = "VERACRUZ_ICECAP_REALM_ENDPOINT
 
 const VERACRUZ_ICECAP_HOST_COMMAND_DEFAULT: &str = "icecap-host";
 
+// const FIRMWARE_VERSION: &str = "0.3.0";
+
 type Result<T> = result::Result<T, VeracruzServerError>;
 
 #[derive(Debug, Error)]
