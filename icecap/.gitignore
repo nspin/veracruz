@@ -1,9 +1,5 @@
-/nix-root
-
 /build
 /crates
-
-/default.nix
 
 result
 result-*

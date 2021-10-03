@@ -8,7 +8,7 @@ let
 
   inherit (configured)
     icecapFirmware icecapPlat selectIceCapPlatOr
-    mkIceDL mkDynDLSpec 
+    mkIceDL mkDynDLSpec
     globalCrates;
 
   now = builtins.readFile ../build/NOW;
