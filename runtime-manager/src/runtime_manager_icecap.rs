@@ -280,6 +280,8 @@ mod libm_hack {
 // HACK
 mod attestation_hack {
 
+    use super::RuntimeManagerError;
+
     pub(super) fn native_attestation(challenge: &[u8], csr: &[u8]) -> Result<Vec<u8>, RuntimeManagerError> {
         todo!()
     }
