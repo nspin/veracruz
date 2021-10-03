@@ -4,14 +4,8 @@ nix_root := nix-root
 
 now := $(build_dir)/NOW
 
-nix_binary_cache_url := http://52.214.93.220:5000
-nix_binary_cache_public_key := icecap:j+jQQU4VWcGmre43aPtCt1GNfLmtO2IMKoZ1MsHOmVY=
-nix_binary_cache_flags := \
-	--option extra-substituters $(nix_binary_cache_url) \
-	--option extra-trusted-public-keys $(nix_binary_cache_public_key)
-
-nix_build := nix-build $(nix_binary_cache_flags) -j$(shell nproc)
-nix_shell := NIX_BUILD_SHELL=bash nix-shell $(nix_binary_cache_flags) -j$(shell nproc) --pure
+nix_build := nix-build -j$(shell nproc)
+nix_shell := nix-shell -j$(shell nproc) --pure
 nix_expression := targets.nix
 
 .PHONY: all
@@ -53,7 +47,7 @@ test-system-stale: $(now) # implicit prerequisites: runtime-manager veracruz-ser
 
 # convenient shortcut
 .PHONY: test-system-stale-test-resources
-test-system-stale: $(now) runtime-manager veracruz-server-test veracruz-test # implicit prerequisite: test-resources
+test-system-stale-test-resources: $(now) runtime-manager veracruz-server-test veracruz-test # implicit prerequisite: test-resources
 	$(nix_build) $(nix_expression) -A test-system
 
 # HACK for setting time in host and realm

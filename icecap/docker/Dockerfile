@@ -4,7 +4,7 @@ ARG UID
 ARG GID
 
 # verbatim from ../base/Dockerfile
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get install -y \
     autoconf \
     automake \
     bc \
@@ -14,16 +14,15 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     cmake \
     curl \
     git \
-    libaio-dev \ 
-    libbluetooth-dev \ 
-    libcap-dev \     
+    libaio-dev \
+    libbluetooth-dev \
+    libcap-dev \
     libclang-dev \
     libcurl4-openssl-dev \
-    libfdt-dev \ 
-    libglib2.0-dev \ 
+    libfdt-dev \
+    libglib2.0-dev \
     libpixman-1-dev \
-    libprotobuf-dev \
-    libsqlite3-dev \ 
+    libsqlite3-dev \
     libssl-dev \
     libtool \
     llvm-dev \
@@ -33,15 +32,15 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python \
     python-crypto \
     python-pip \
-    sqlite3 \ 
+    sqlite3 \
     unzip \
     uuid-dev \
     wget \
     xxd \
-    zlib1g-dev; \
-    pip install pycryptodome; \
-    apt-get autoremove -y && apt-get clean; \
-    rm -rf /tmp/* /var/tmp/*
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install pycryptodome
 
 
 RUN groupadd -f -g $GID x && useradd -u $UID -g $GID -m -p x x
@@ -69,22 +68,6 @@ RUN curl -L -o ${rustup_tmp} "https://static.rust-lang.org/rustup/archive/1.22.1
 RUN cargo install diesel_cli --no-default-features --features sqlite
 
 
-### protobuf ###
-
-ARG protobuf_dir=/usr/local/protobuf
-ENV PATH "${protobuf_dir}/bin:${PATH}"
-
-USER root
-RUN mkdir $protobuf_dir && chown x $protobuf_dir
-USER x
-
-ARG protobuf_version=3.12.4
-ARG protobuf_tmp=/tmp/protobuf.zip
-RUN curl -L -o ${protobuf_tmp} https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protoc-${protobuf_version}-linux-x86_64.zip \
-        && unzip ${protobuf_tmp} -d ${protobuf_dir} \
-        && rm ${protobuf_tmp}
-
-
 ### nix ###
 
 ENV PATH="/nix/env/bin:${PATH}"
@@ -93,6 +76,8 @@ ENV NIX_SSL_CERT_FILE=/nix/env/etc/ssl/certs/ca-bundle.crt
 
 # HACK for persistent git cache.
 ENV XDG_CACHE_HOME=/nix/cache
+
+ENV NIX_BUILD_SHELL bash
 
 COPY nix.conf /etc/nix/
 COPY setup.sh /

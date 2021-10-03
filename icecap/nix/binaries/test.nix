@@ -1,7 +1,6 @@
 { lib, stdenv, hostPlatform, buildPackages, mkShell
 , rustc, cargo, git, cacert
 , crateUtils, nixToToml
-, llvmPackages
 , pkgconfig, protobuf, perl, python3
 , openssl, sqlite
 }:
@@ -14,8 +13,6 @@ let
 
   debug = false;
 
-  libclang = (llvmPackages.libclang.nativeDrv or llvmPackages.libclang).lib;
-
   cargoConfig = nixToToml (crateUtils.clobber [
     crateUtils.baseCargoConfig
   ]);
@@ -27,13 +24,12 @@ mkShell (crateUtils.baseEnv // rec {
   inherit name;
 
   PKG_CONFIG_ALLOW_CROSS = 1;
-  LIBCLANG_PATH = "${libclang}/lib";
+  LIBCLANG_PATH = "${lib.getLib buildPackages.llvmPackages.libclang}/lib";
 
   hardeningDisable = [ "all" ]; # HACK
 
   depsBuildBuild = [
     buildPackages.stdenv.cc
-    libclang
   ];
 
   nativeBuildInputs = [
