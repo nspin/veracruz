@@ -16,9 +16,9 @@ pub type SessionId = u32;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Request {
-    New { policy_json: String },
-    GetEnclaveCert,
-    GetEnclaveName,
+    Initialize { policy_json: String },
+    Attestation { device_id: i32, challenge: Vec<u8> },
+    CertificateChain { root_cert: Vec<u8>, compute_cert: Vec<u8> },
     NewTlsSession,
     CloseTlsSession(SessionId),
     SendTlsData(SessionId, Vec<u8>),
@@ -28,9 +28,9 @@ pub enum Request {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Response {
-    New,
-    GetEnclaveCert(Vec<u8>),
-    GetEnclaveName(String),
+    Initialize,
+    Attestation { token: Vec<u8>, csr: Vec<u8> },
+    CertificateChain,
     NewTlsSession(SessionId),
     CloseTlsSession,
     SendTlsData,

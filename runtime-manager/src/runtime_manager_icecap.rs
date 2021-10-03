@@ -31,7 +31,7 @@ use icecap_event_server_types::{
 
 use veracruz_utils::platform::icecap::message::{Request, Response, Error};
 
-use crate::managers::session_manager;
+use crate::managers::{session_manager, RuntimeManagerError};
 
 declare_generic_main!(main);
 
@@ -94,40 +94,47 @@ impl RuntimeManager {
 
     fn run(&mut self) -> Fallible<()> {
         loop {
-            let req = self.recv()?;
-            let resp = self.handle(&req)?;
-            self.send(&resp)?;
+            let req = self.recv().map_err(|e| format_err!("RuntimeManagerErro: {:?}", e))?;
+            let resp = self.handle(req)?;
+            self.send(&resp).map_err(|e| format_err!("RuntimeManagerErro: {:?}", e))?;
             if !self.active {
-                std::icecap_impl::external::runtime::exit();
+                std::icecap_impl::external::runtime::exit(); // HACK
             }
         }
     }
 
-    fn handle(&mut self, req: &Request) -> Fallible<Response> {
+    fn handle(&mut self, req: Request) -> Fallible<Response> {
         Ok(match req {
-            Request::New { policy_json } => {
-                session_manager::init_session_manager(&policy_json).unwrap();
-                Response::New
-            }
-            Request::GetEnclaveCert => {
-                match session_manager::get_enclave_cert_pem() {
+            Request::Initialize { policy_json } => {
+                match session_manager::init_session_manager().and(session_manager::load_policy(&policy_json)) {
                     Err(e) => {
                         log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
-                    Ok(cert) => {
-                        Response::GetEnclaveCert(cert)
+                    Ok(()) => {
+                        Response::Initialize
                     }
                 }
             }
-            Request::GetEnclaveName => {
-                match session_manager::get_enclave_name() {
+            Request::Attestation { device_id, challenge } => {
+                match self.handle_attestation(device_id, &challenge) {
                     Err(e) => {
                         log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
                     }
-                    Ok(name) => {
-                        Response::GetEnclaveName(name)
+                    Ok((token, csr)) => {
+                        Response::Attestation { token, csr }
+                    }
+                }
+            }
+            Request::CertificateChain { root_cert, compute_cert } => {
+                match session_manager::load_cert_chain(&vec![compute_cert, root_cert]) {
+                    Err(e) => {
+                        log::warn!("{:?}", e);
+                        Response::Error(Error::Unspecified)
+                    }
+                    Ok(()) => {
+                        Response::CertificateChain
                     }
                 }
             }
@@ -143,7 +150,7 @@ impl RuntimeManager {
                 }
             }
             Request::CloseTlsSession(sess) => {
-                match session_manager::close_session(*sess) {
+                match session_manager::close_session(sess) {
                     Err(e) => {
                         log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
@@ -154,7 +161,7 @@ impl RuntimeManager {
                 }
             }
             Request::SendTlsData(sess, data) => {
-                match session_manager::send_data(*sess, data) {
+                match session_manager::send_data(sess, &data) {
                     Err(e) => {
                         log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
@@ -165,7 +172,7 @@ impl RuntimeManager {
                 }
             }
             Request::GetTlsDataNeeded(sess) => {
-                match session_manager::get_data_needed(*sess) {
+                match session_manager::get_data_needed(sess) {
                     Err(e) => {
                         log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
@@ -176,7 +183,7 @@ impl RuntimeManager {
                 }
             }
             Request::GetTlsData(sess) => {
-                match session_manager::get_data(*sess) {
+                match session_manager::get_data(sess) {
                     Err(e) => {
                         log::warn!("{:?}", e);
                         Response::Error(Error::Unspecified)
@@ -190,22 +197,27 @@ impl RuntimeManager {
         })
     }
 
-    fn wait(&self) -> Fallible<()> {
+    fn handle_attestation(&self, device_id: i32, challenge: &[u8]) -> Result<(Vec<u8>, Vec<u8>), RuntimeManagerError> {
+        let token = todo!();
+        let csr = todo!();
+        Ok((token, csr))
+    }
+
+    fn wait(&self) {
         log::trace!("waiting");
         let badge = self.event.wait();
         log::trace!("done waiting");
         self.event_server_bitfield.clear_ignore(badge);
-        Ok(())
     }
 
-    fn send(&mut self, resp: &Response) -> Fallible<()> {
+    fn send(&mut self, resp: &Response) -> Result<(), RuntimeManagerError> {
         log::trace!("write: {:x?}", resp);
         let mut block = false;
-        let resp_bytes = serialize(resp).unwrap();
+        let resp_bytes = serialize(resp).map_err(RuntimeManagerError::SerializationError)?;
         while !self.channel.write(&resp_bytes) {
             log::warn!("host ring buffer full, waiting on notification");
             if block {
-                self.wait()?;
+                self.wait();
                 block = false;
             } else {
                 block = true;
@@ -216,17 +228,17 @@ impl RuntimeManager {
         Ok(())
     }
 
-    fn recv(&mut self) -> Fallible<Request> {
+    fn recv(&mut self) -> Result<Request, RuntimeManagerError> {
         log::trace!("read enter");
         let mut block = false;
         loop {
             if let Some(msg) = self.channel.read() {
                 self.channel.notify_read();
-                let req = deserialize(&msg).unwrap();
+                let req = deserialize(&msg).map_err(RuntimeManagerError::SerializationError)?;
                 log::trace!("read: {:x?}", req);
                 return Ok(req);
             } else if block {
-                self.wait()?;
+                self.wait();
                 block = false;
             } else {
                 block = true;
