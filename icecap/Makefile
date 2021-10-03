@@ -46,9 +46,14 @@ test-resources:
 test-system: $(now) runtime-manager veracruz-server-test veracruz-test test-resources
 	$(nix_build) $(nix_expression) -A $@
 
-# useful shortcut
+# convenient shortcut
 .PHONY: test-system-stale
 test-system-stale: $(now) # implicit prerequisites: runtime-manager veracruz-server-test veracruz-test test-resources
+	$(nix_build) $(nix_expression) -A test-system
+
+# convenient shortcut
+.PHONY: test-system-stale-test-resources
+test-system-stale: $(now) runtime-manager veracruz-server-test veracruz-test # implicit prerequisite: test-resources
 	$(nix_build) $(nix_expression) -A test-system
 
 # HACK for setting time in host and realm
