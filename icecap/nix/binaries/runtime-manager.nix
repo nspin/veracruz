@@ -1,6 +1,6 @@
-{ lib, stdenv, hostPlatform, buildPackages, mkShell
+{ lib, stdenv, buildPackages, mkShell
 , rustc, cargo, git, cacert
-, crateUtils, nixToToml
+, crateUtils, nixToToml, rustTargetName
 , protobuf, perl, python3
 , liboutline, sysroot-rs
 , icecapCrates, fakeLibc
@@ -17,10 +17,10 @@ let
   cargoConfig = nixToToml (crateUtils.clobber [
     crateUtils.baseCargoConfig
     {
-      target.${hostPlatform.config}.rustflags = [ "--sysroot=${sysroot-rs}" ];
+      target.${rustTargetName}.rustflags = [ "--sysroot=${sysroot-rs}" ];
     }
     {
-      target.${hostPlatform.config} = crateUtils.clobber (lib.forEach icecapCrates (crate:
+      target.${rustTargetName} = crateUtils.clobber (lib.forEach icecapCrates (crate:
         lib.optionalAttrs (crate.buildScript != null) {
           ${"dummy-link-${crate.name}"} = crate.buildScript;
         }
@@ -64,7 +64,7 @@ mkShell (crateUtils.baseEnv // {
       (cd $build_dir && cargo build \
          -Z unstable-options \
         --manifest-path ${manifestPath} \
-        --target ${hostPlatform.config} --features icecap \
+        --target ${rustTargetName} --features icecap \
         ${lib.optionalString (!debug) "--release"} \
         --target-dir ./target \
         --out-dir ./out \

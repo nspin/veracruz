@@ -1,8 +1,8 @@
-{ lib, stdenv, hostPlatform, buildPackages, mkShell
+{ lib, stdenv, buildPackages, mkShell
 , rustc, cargo, git, cacert
-, crateUtils, nixToToml
-, pkgconfig, protobuf, perl, python3
-, openssl, sqlite
+, crateUtils, nixToToml, rustTargetName
+, protobuf, perl, python3
+, pkgconfig, openssl, sqlite
 }:
 
 { name }:
@@ -21,10 +21,8 @@ in
 
 mkShell (crateUtils.baseEnv // rec {
 
-  inherit name;
-
-  PKG_CONFIG_ALLOW_CROSS = 1;
   LIBCLANG_PATH = "${lib.getLib buildPackages.llvmPackages.libclang}/lib";
+  PKG_CONFIG_ALLOW_CROSS = 1;
 
   hardeningDisable = [ "all" ]; # HACK
 
@@ -34,7 +32,8 @@ mkShell (crateUtils.baseEnv // rec {
 
   nativeBuildInputs = [
     rustc cargo git cacert
-    pkgconfig protobuf perl python3
+    protobuf perl python3
+    pkgconfig
   ];
 
   buildInputs = [
@@ -62,7 +61,7 @@ mkShell (crateUtils.baseEnv // rec {
       setup && \
       (cd $build_dir && cargo test --no-run \
         --manifest-path ${manifestPath} \
-        --target ${hostPlatform.config} --features icecap \
+        --target ${rustTargetName} --features icecap \
         ${lib.optionalString (!debug) "--release"} \
         -j $NIX_BUILD_CORES \
         --target-dir ./target \
@@ -77,7 +76,7 @@ mkShell (crateUtils.baseEnv // rec {
     }
 
     distinguish() {
-      d=$build_dir/target/${hostPlatform.config}/${if debug then "debug" else "release"}/deps
+      d=$build_dir/target/${rustTargetName}/${if debug then "debug" else "release"}/deps
       f="$(find $d -executable -type f -printf "%T@ %p\n" \
         | sort -n \
         | tail -n 1 \
