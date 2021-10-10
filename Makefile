@@ -48,6 +48,7 @@ sgx-veracruz-client-test: sgx sgx-test-collateral
 
 # Test veracruz-client for sgx, due to the use of a mocked server with a fixed port, these tests must run in a single thread
 trustzone-veracruz-client-test: trustzone trustzone-test-collateral
+	rm -rf sdk # TODO_BEFORE_MERGE
 	cd veracruz-client && cargo test --lib --features "mock tz" -- --test-threads=1
 
 nitro-veracruz-client-test: nitro nitro-test-collateral
