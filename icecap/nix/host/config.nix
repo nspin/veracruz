@@ -33,6 +33,7 @@ in {
 
         # utilities for setup and debugging
         copy_bin_and_libs ${pkgs.strace}/bin/strace
+        copy_bin_and_libs ${pkgs.gdb}/bin/gdb
         copy_bin_and_libs ${pkgs.iproute}/bin/ip
         copy_bin_and_libs ${pkgs.curl.bin}/bin/curl
         cp -pdv ${pkgs.libunwind}/lib/libunwind-aarch64*.so* $out/lib
@@ -44,6 +45,7 @@ in {
       };
 
       initramfs.extraInitCommands = ''
+        ulimit -S -c unlimited
         mount -t debugfs none /sys/kernel/debug/
 
         date -s '@${now}'

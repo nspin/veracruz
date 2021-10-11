@@ -95,10 +95,10 @@ in lib.fix (self: with self; {
     runtime-manager = configured.callPackage ./realm/runtime-manager.nix {
       inherit icecapCrates libc-supplement;
     };
-    veracruz-server-test = pkgs.linux.icecap.callPackage ./host/test.nix {} {
+    veracruz-server-test = pkgs.musl.icecap.callPackage ./host/test.nix {} {
       name = "veracruz-server-test";
     };
-    veracruz-test = pkgs.linux.icecap.callPackage ./host/test.nix {} {
+    veracruz-test = pkgs.musl.icecap.callPackage ./host/test.nix {} {
       name = "veracruz-test";
     };
   };
