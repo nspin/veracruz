@@ -115,6 +115,7 @@ jobs:
             . ./environment
             cd /work/veracruz
             make trustzone
+            make trustzone-test-collateral && rm -rf sdk # HACK to avoid running out of disk space
             make trustzone-veracruz-server-test
             make trustzone-veracruz-test
             make trustzone-veracruz-client-test

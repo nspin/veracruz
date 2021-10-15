@@ -47,7 +47,7 @@ sgx-veracruz-client-test: sgx sgx-test-collateral
 	cd veracruz-client && RUSTFLAGS=$(SGX_RUST_FLAG) cargo test --lib --features "mock sgx" -- --test-threads=1
 
 # Test veracruz-client for sgx, due to the use of a mocked server with a fixed port, these tests must run in a single thread
-trustzone-veracruz-client-test: trustzone trustzone-test-collateral
+trustzone-veracruz-client-test:
 	cd veracruz-client && cargo test --lib --features "mock tz" -- --test-threads=1
 
 nitro-veracruz-client-test: nitro nitro-test-collateral
@@ -183,7 +183,7 @@ sgx-psa-attestation: sgx-env
 tz-psa-attestation: trustzone-env
 	cd psa-attestation && cargo build --target aarch64-unknown-linux-gnu --features tz
 
-trustzone-veracruz-server-test: trustzone-test-collateral trustzone trustzone-test-env veracruz-server-test/proxy-attestation-server.db
+trustzone-veracruz-server-test: trustzone-test-env veracruz-server-test/proxy-attestation-server.db
 	cd veracruz-server-test \
         && CC_aarch64_unknown_linux_gnu=$(AARCH64_GCC) OPENSSL_INCLUDE_DIR=$(OPENSSL_INCLUDE_DIR) \
                 OPENSSL_LIB_DIR=$(OPENSSL_LIB_DIR) C_INCLUDE_PATH=$(TRUSTZONE_C_INCLUDE_PATH) \
@@ -192,7 +192,7 @@ trustzone-veracruz-server-test: trustzone-test-collateral trustzone trustzone-te
 	chmod u+x run_veracruz_server_test_tz.sh
 	./run_veracruz_server_test_tz.sh
 
-trustzone-veracruz-test: trustzone-test-collateral trustzone trustzone-test-env veracruz-test/proxy-attestation-server.db
+trustzone-veracruz-test: trustzone-test-env veracruz-test/proxy-attestation-server.db
 	cd veracruz-test \
         && CC_aarch64_unknown_linux_gnu=$(AARCH64_GCC) OPENSSL_INCLUDE_DIR=$(OPENSSL_INCLUDE_DIR) \
                 OPENSSL_LIB_DIR=$(OPENSSL_LIB_DIR) C_INCLUDE_PATH=$(TRUSTZONE_C_INCLUDE_PATH) \
