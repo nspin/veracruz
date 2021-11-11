@@ -21,10 +21,21 @@ use icecap_start_generic::declare_generic_main;
 
 declare_generic_main!(main);
 
-const LOG_LEVEL: Level = Level::Trace;
+const LOG_LEVEL: Level = Level::Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
+    ep: Endpoint,
+    request_badge: Badge,
+    fault_badge: Badge,
+    mmap_base: u64,
+    pool: Pool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Pool {
+    large_pages: Vec<LargePage>,
+    hack_large_pages: Vec<LargePage>,
 }
 
 fn init_logging() {
@@ -37,6 +48,6 @@ fn init_logging() {
 
 fn main(config: Config) -> Fallible<()> {
     init_logging();
-    debug_println!("hello");
+    debug_println!("hello {:x?}", config);
     Ok(())
 }

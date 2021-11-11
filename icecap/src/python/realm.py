@@ -72,10 +72,10 @@ class RuntimeManagerSupervisor(GenericElfComponent):
             'pool': {
                 'large_pages': [
                     self.cspace().alloc(
-                        self.alloc(ObjectType.seL4_FrameObject, name='block_{}'.format(i), size_bits=BLOCK_SIZE_BITS),
+                        self.alloc(ObjectType.seL4_FrameObject, name='block_{}'.format(i), size=BLOCK_SIZE),
                         read=True, write=True,
                         )
-                    for i in range(2048)
+                    for i in range(64)
                     ],
                 'hack_large_pages': self.hack_large_pages,
                 }
