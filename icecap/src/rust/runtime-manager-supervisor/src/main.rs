@@ -26,9 +26,11 @@ const LOG_LEVEL: Level = Level::Error;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
     ep: Endpoint,
+    runtime_manager_pgd: PGD,
+    runtime_manager_tcb: TCB,
     request_badge: Badge,
     fault_badge: Badge,
-    mmap_base: u64,
+    mmap_base: usize,
     pool: Pool,
 }
 
@@ -47,7 +49,29 @@ fn init_logging() {
 }
 
 fn main(config: Config) -> Fallible<()> {
+    let mut config = config; // HACK
+
     init_logging();
-    debug_println!("hello {:x?}", config);
+    // debug_println!("{:x?}", config);
+
+    for cap in &config.pool.hack_large_pages {
+        cap.unmap()?;
+    }
+
+    // test
+    let page = config.pool.large_pages.pop().unwrap();
+    let vaddr = config.mmap_base;
+    debug_println!("vaddr: 0x{:x}", vaddr);
+    page.map(config.runtime_manager_pgd, vaddr, CapRights::read_write(), VMAttributes::default())?;
+
+    debug_println!("supervisor main loop");
+    loop {
+        let (info, badge) = config.ep.recv();
+        if badge == config.request_badge {
+        } else if badge == config.fault_badge {
+        } else {
+            panic!()
+        }
+    }
     Ok(())
 }

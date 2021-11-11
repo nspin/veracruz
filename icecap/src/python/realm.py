@@ -17,7 +17,7 @@ from icedl.utils import PAGE_SIZE_BITS, BLOCK_SIZE_BITS, BLOCK_SIZE, block_at
 REQUEST_BADGE = 1
 FAULT_BADGE = 2
 
-MMAP_BASE = block_at(100, 0, 0)
+MMAP_BASE = block_at(0x10, 0, 0) << BLOCK_SIZE_BITS
 
 class RuntimeManager(GenericElfComponent):
 
