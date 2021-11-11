@@ -10,14 +10,17 @@
 # and copyright information.
 
 from capdl import ObjectType
-from icedl.common import GenericElfComponent
+from icedl.common import GenericElfComponent, DEFAULT_PRIO
 from icedl.realm import BaseRealmComposition
 from icedl.utils import PAGE_SIZE_BITS, BLOCK_SIZE
 
+REQUEST_BADGE = 1
+FAULT_BADGE = 2
+
 class RuntimeManager(GenericElfComponent):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, runtime_manager_supervisor=None, **kwargs):
+        super().__init__(*args, **kwargs, fault_handler=runtime_manager_supervisor)
 
         node_index = 0
 
@@ -43,6 +46,7 @@ class RuntimeManager(GenericElfComponent):
             'event_server_endpoint': self.cspace().alloc(event_server_endpoint, write=True, grantreply=True),
             'event_server_bitfield': self.map_region([(event_server_bitfield, PAGE_SIZE_BITS)], read=True, write=True),
             'channel': self.map_ring_buffer(channel),
+            'supervisor_ep': self.cspace().alloc(runtime_manager_supervisor.ep, write=True, grantreply=True, badge=REQUEST_BADGE),
             }
 
     def arg_json(self):
@@ -53,10 +57,18 @@ class RuntimeManagerSupervisor(GenericElfComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        node_index = 0
+        self.ep = self.alloc(ObjectType.seL4_EndpointObject, name='ep')
+        self.runtime_manager_tcb = None
 
         self._arg = {
+            'ep': self.cspace().alloc(self.ep, read=True)
             }
+
+    # as fault_handler
+    def handle(self, thread):
+        assert self.runtime_manager_tcb is None
+        self.runtime_manager_tcb = thread.tcb
+        thread.component.cspace().alloc(self.ep, badge=FAULT_BADGE, write=True, grant=True)
 
     def arg_json(self):
         return self._arg
@@ -64,7 +76,7 @@ class RuntimeManagerSupervisor(GenericElfComponent):
 class Composition(BaseRealmComposition):
 
     def compose(self):
-        self.runtime_manager_supervisor = self.component(RuntimeManagerSupervisor, 'runtime_manager_supervisor')
-        self.runtime_manager = self.component(RuntimeManager, 'runtime_manager')
+        runtime_manager_supervisor = self.component(RuntimeManagerSupervisor, 'runtime_manager_supervisor', prio=DEFAULT_PRIO + 1)
+        runtime_manager = self.component(RuntimeManager, 'runtime_manager', runtime_manager_supervisor=runtime_manager_supervisor)
 
 Composition.from_env().run()
