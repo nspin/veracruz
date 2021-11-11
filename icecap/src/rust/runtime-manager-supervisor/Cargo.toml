@@ -16,6 +16,7 @@ edition = "2018"
 [dependencies]
 icecap-std = { path = "../../../icecap/src/rust/crates/icecap/icecap-std" }
 icecap-start-generic = { path = "../../../icecap/src/rust/crates/icecap/icecap-start/generic" }
+serde = { version = "*", default-features = false, features = [ "alloc", "derive"] }
 
 [build-dependencies]
 clang-sys = "=1.2.1"

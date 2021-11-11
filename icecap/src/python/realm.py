@@ -48,9 +48,23 @@ class RuntimeManager(GenericElfComponent):
     def arg_json(self):
         return self._arg
 
+class RuntimeManagerSupervisor(GenericElfComponent):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        node_index = 0
+
+        self._arg = {
+            }
+
+    def arg_json(self):
+        return self._arg
+
 class Composition(BaseRealmComposition):
 
     def compose(self):
-        self.component(RuntimeManager, 'runtime_manager')
+        self.runtime_manager_supervisor = self.component(RuntimeManagerSupervisor, 'runtime_manager_supervisor')
+        self.runtime_manager = self.component(RuntimeManager, 'runtime_manager')
 
 Composition.from_env().run()

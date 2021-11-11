@@ -17,6 +17,7 @@ let
   inherit (configured) icecapFirmware icecapPlat selectIceCapPlatOr mkRealm;
 
   runtimeManagerElf = ../build/runtime-manager/out/runtime_manager_enclave.elf;
+  runtimeManagerSupervisorElf = ../build/runtime-manager-supervisor/out/runtime-manager-supervisor.elf;
 
   testElf = {
     veracruz-server-test = ../build/veracruz-server-test/out/veracruz-server-test;
@@ -88,6 +89,7 @@ in lib.fix (self: with self; {
       realm_id = 0;
       num_cores = 1;
       components = {
+        runtime_manager_supervisor.image = elfUtils.split runtimeManagerSupervisorElf;
         runtime_manager.image = elfUtils.split runtimeManagerElf;
         runtime_manager.heap_size = 64 * 1048576; # 64M (HACK overstimate)
       };
