@@ -12,10 +12,12 @@
 from capdl import ObjectType
 from icedl.common import GenericElfComponent, DEFAULT_PRIO
 from icedl.realm import BaseRealmComposition
-from icedl.utils import PAGE_SIZE_BITS, BLOCK_SIZE
+from icedl.utils import PAGE_SIZE_BITS, BLOCK_SIZE_BITS, BLOCK_SIZE, block_at
 
 REQUEST_BADGE = 1
 FAULT_BADGE = 2
+
+MMAP_BASE = block_at(0x10, 0, 0)
 
 class RuntimeManager(GenericElfComponent):
 
@@ -61,7 +63,16 @@ class RuntimeManagerSupervisor(GenericElfComponent):
         self.runtime_manager_tcb = None
 
         self._arg = {
-            'ep': self.cspace().alloc(self.ep, read=True)
+            'ep': self.cspace().alloc(self.ep, read=True),
+            'pool': {
+                'large_pages': [
+                    self.cspace().alloc(
+                        self.alloc(ObjectType.seL4_FrameObject, name='block_{}'.format(i), size_bits=BLOCK_SIZE_BITS),
+                        read=True, write=True
+                        )
+                    for i in range(512)
+                    ],
+                }
             }
 
     # as fault_handler
@@ -69,6 +80,9 @@ class RuntimeManagerSupervisor(GenericElfComponent):
         assert self.runtime_manager_tcb is None
         self.runtime_manager_tcb = thread.tcb
         thread.component.cspace().alloc(self.ep, badge=FAULT_BADGE, write=True, grant=True)
+
+    def after(self, runtime_manager):
+        self._arg['pd'] = self.cspace().alloc(runtime_manager.pd(), write=True)
 
     def arg_json(self):
         return self._arg
@@ -78,5 +92,6 @@ class Composition(BaseRealmComposition):
     def compose(self):
         runtime_manager_supervisor = self.component(RuntimeManagerSupervisor, 'runtime_manager_supervisor', prio=DEFAULT_PRIO + 1)
         runtime_manager = self.component(RuntimeManager, 'runtime_manager', runtime_manager_supervisor=runtime_manager_supervisor)
+        runtime_manager_supervisor.after(runtime_manager)
 
 Composition.from_env().run()
