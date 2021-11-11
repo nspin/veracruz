@@ -61,7 +61,6 @@ fn main(config: Config) -> Fallible<()> {
     // test
     let page = config.pool.large_pages.pop().unwrap();
     let vaddr = config.mmap_base;
-    debug_println!("vaddr: 0x{:x}", vaddr);
     page.map(config.runtime_manager_pgd, vaddr, CapRights::read_write(), VMAttributes::default())?;
 
     debug_println!("supervisor main loop");
