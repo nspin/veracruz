@@ -100,9 +100,19 @@ in lib.fix (self: with self; {
       callTest = pkgs.linux.icecap.callPackage ./env/host-test-generic.nix {
         inherit kebabToCaml;
       };
-    in {
-      runtime-manager = configured.callPackage ./env/runtime-manager.nix {
+      callRealm = configured.callPackage ./env/realm-generic.nix {
         inherit libc-supplement kebabToCaml;
+      };
+    in {
+      runtime-manager = callRealm {
+        name = "runtime-manager";
+        path = ../../runtime-manager;
+        features = [ "icecap" ];
+        sysroot = true;
+      };
+      runtime-manager-supervisor = callRealm {
+        name = "runtime-manager-supervisor";
+        path = ../src/rust/runtime-manager-supervisor;
       };
       veracruz-server-test = callTest {
         name = "veracruz-server-test";

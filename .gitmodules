@@ -24,3 +24,6 @@
 [submodule "icecap/icecap"]
 	path = icecap/icecap
 	url = https://gitlab.com/arm-research/security/icecap/icecap.git
+[submodule "icecap/deps/wasmtime"]
+	path = icecap/deps/wasmtime
+	url = git@github.com:nspin/wasmtime.git
